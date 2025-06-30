@@ -1,0 +1,10 @@
+aws-cdk-lib==2.195.0
+aws-cdk.aws-scheduler-alpha
+aws-cdk.aws-scheduler-targets-alpha
+cdk-nag
+constructs>=10.0.0,<11.0.0
+boto3
+botocore
+aws_lambda_powertools
+pyjwt
+requests
