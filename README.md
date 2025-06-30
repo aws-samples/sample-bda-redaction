@@ -1,4 +1,4 @@
-# Multimodal PII Redaction
+# Multimodal PII Redaction Using Amazon Bedrock
 
 ## Infrastructure
 
