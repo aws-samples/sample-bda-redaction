@@ -9,7 +9,7 @@ rm -f pypackages_lambda_layer.zip
 mkdir -p python
 
 # Install packages
-pip install -r requirements.txt -t python --no-cache-dir
+pip3 install -r requirements.txt -t python --no-cache-dir
 
 # Remove unnecessary files to reduce size
 find python -type d -name "tests" -exec rm -rf {} +

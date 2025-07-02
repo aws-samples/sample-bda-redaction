@@ -288,11 +288,16 @@ class S3Stack(Stack):
            )
         )
 
-        # Get the AZs supported by Comprehend VPC Endpoint
-        endpoint_response = ec2_boto3.describe_vpc_endpoint_services(
-            ServiceNames=[f'com.amazonaws.{self.region}.comprehend']
+        # Get the AZs supported by BDA VPC Endpoint
+        endpoint_response_bda = ec2_boto3.describe_vpc_endpoint_services(
+            ServiceNames=[f'com.amazonaws.{self.region}.bedrock-data-automation']
         )
-        supported_azs = endpoint_response['ServiceDetails'][0]['AvailabilityZones']
+        supported_azs_bda = endpoint_response_bda['ServiceDetails'][0]['AvailabilityZones']
+        # Get the AZs supported by BDA Runtime VPC Endpoint
+        endpoint_response_bda_runtime = ec2_boto3.describe_vpc_endpoint_services(
+            ServiceNames=[f'com.amazonaws.{self.region}.bedrock-data-automation-runtime']
+        )
+        supported_azs_bda_rumtime = endpoint_response_bda_runtime['ServiceDetails'][0]['AvailabilityZones']
         # Get all subnets in the VPC
         subnet_response = ec2_boto3.describe_subnets(
             Filters=[
@@ -305,19 +310,32 @@ class S3Stack(Stack):
                 {'Name': 'vpc-id', 'Values': [vpc_id]}
             ]
         )
-        supported_subnet_ids_list=[]
+        supported_subnet_ids_list_bda=[]
         all_subnets = []
         for subnet in subnet_response['Subnets']:
             if 'Tags' in subnet:
                 for tag in subnet['Tags']:
                     if tag['Key'] == 'Name' and 'public' not in tag['Value'].lower():
                         all_subnets.append(subnet['SubnetId'])
-            for supported_az in supported_azs:
+            for supported_az in supported_azs_bda:
                 if subnet['AvailabilityZone'] == supported_az and 'Tags' in subnet:
                     for tag in subnet['Tags']:
                         if tag['Key'] == 'Name' and 'public' not in tag['Value'].lower():
                             # Add the subnet ID to the list
-                            supported_subnet_ids_list.append(subnet['SubnetId'])
+                            supported_subnet_ids_list_bda.append(subnet['SubnetId'])
+        supported_subnet_ids_list_bda_runtime=[]
+        all_subnets = []
+        for subnet in subnet_response['Subnets']:
+            if 'Tags' in subnet:
+                for tag in subnet['Tags']:
+                    if tag['Key'] == 'Name' and 'public' not in tag['Value'].lower():
+                        all_subnets.append(subnet['SubnetId'])
+            for supported_az in supported_azs_bda_rumtime:
+                if subnet['AvailabilityZone'] == supported_az and 'Tags' in subnet:
+                    for tag in subnet['Tags']:
+                        if tag['Key'] == 'Name' and 'public' not in tag['Value'].lower():
+                            # Add the subnet ID to the list
+                            supported_subnet_ids_list_bda_runtime.append(subnet['SubnetId'])
         #supported_subnet_ids_str= ','.join(supported_subnet_ids_list)
         # Get the AZs supported by smtp VPC Endpoint
         smtp_endpoint_response = ec2_boto3.describe_vpc_endpoint_services(
@@ -338,7 +356,12 @@ class S3Stack(Stack):
         # Convert the comma-separated string to a list of ISubnet objects
         supported_subnet_ids = [
             ec2.Subnet.from_subnet_id(self, f"SupportedSubnet{i}", subnet_id)
-            for i, subnet_id in enumerate(supported_subnet_ids_list)
+            for i, subnet_id in enumerate(supported_subnet_ids_list_bda)
+        ]
+        # Convert the comma-separated string to a list of ISubnet objects
+        supported_subnet_ids_bda_runtime = [
+            ec2.Subnet.from_subnet_id(self, f"BDASupportedSubnet{i}", subnet_id)
+            for i, subnet_id in enumerate(supported_subnet_ids_list_bda_runtime)
         ]
         # Convert the comma-separated string to a list of ISubnet objects
         smtp_supported_subnet_ids = [
@@ -442,7 +465,7 @@ class S3Stack(Stack):
             "piiRedactionBDARuntimeInterfaceEndpoint",
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointService(f"com.amazonaws.{self.region}.bedrock-data-automation-runtime"),
-            subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
+            subnets=ec2.SubnetSelection(subnets=supported_subnet_ids_bda_runtime),
             security_groups=[security_group],
             private_dns_enabled=True
         )

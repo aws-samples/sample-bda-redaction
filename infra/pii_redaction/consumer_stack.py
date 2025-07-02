@@ -54,7 +54,8 @@ class ConsumerStack(Stack):
         # Get the KMS key from the alias ARN
         kms_key = kms.Key.from_key_arn(self, "KMSKey", f"arn:aws:kms:{self.region}:{self.account}:alias/aws/sns")
         #create project with custom settings for bedrock data automation
-        cfn_bda = bedrock.CfnDataAutomationProject(self, "piiRedactionBedrockProject",project_name="piiBedrockDataAutomationProject",
+        cfn_bda = bedrock.CfnDataAutomationProject(self, "piiRedactionBedrockProject",
+                                                   project_name="piiBedrockDataAutomationProject",
                                          standard_output_configuration=
                                                 {"Document": 
                                                     {"Extraction": {"BoundingBox": {"State": "ENABLED"}, "Granularity": {"Types": ["PAGE", "ELEMENT", "WORD"]}},
@@ -225,27 +226,27 @@ class ConsumerStack(Stack):
                 ))
         #create bedrock guardrail version
         cfn_guardrail_version = bedrock.CfnGuardrailVersion(self, "piiRedactionGuardrailVersion",
-            guardrail_identifier=f"arn:aws:bedrock:{self.region}::guardrail/piiRedactionGuardrail"
+            guardrail_identifier = cfn_guardrail.attr_guardrail_id
         )
         #create sns topics success and failure with default encryption enabled
         success_topic = sns.Topic(
             self, 
             "piiRedactionSuccessTopic",
-            topic_name=stackPrefix(resource_prefix, "piiRedactionSuccessTopic"),
+            #topic_name=stackPrefix(resource_prefix, "piiRedactionSuccessTopic"),
             master_key=kms_key
         )
 
         failure_topic = sns.Topic(
             self, 
             "piiRedactionFailureTopic",
-            topic_name=stackPrefix(resource_prefix, "piiRedactionFailureTopic"),
+            #topic_name=stackPrefix(resource_prefix, "piiRedactionFailureTopic"),
             master_key=kms_key
         )
         
         crm_topic = sns.Topic(
             self, 
             "piiRedactionCRMTopic",
-            topic_name=stackPrefix(resource_prefix, "piiRedactionCRMTopic"),
+            #topic_name=stackPrefix(resource_prefix, "piiRedactionCRMTopic"),
             master_key=kms_key
         )
 
@@ -282,7 +283,7 @@ class ConsumerStack(Stack):
         emailProcessing_Lambda = lambda_.Function(
             self, 
             "piiRedactionemailProcessingLambda",
-            function_name=stackPrefix(resource_prefix, "piiRedactionemailProcessingLambda"),
+            #function_name=stackPrefix(resource_prefix, "piiRedactionemailProcessingLambda"),
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="emailExtractRedact.lambda_handler",
             code=lambda_.Code.from_asset("./pii_redaction/lambda/emailProcessing"),
@@ -306,15 +307,15 @@ class ConsumerStack(Stack):
             },
             role=lambda_role,
             timeout=Duration.seconds(900),
-            log_group=logs.LogGroup(self, 'piiRedactionemailProcessingLambdaLogGroup', 
-                log_group_name=stackPrefix(resource_prefix, "piiRedactionemailProcessingLambdaLogGroup")
+            log_group=logs.LogGroup(self, 'piiRedactionemailProcessingLambdaLogGroup'
+                    #,log_group_name=stackPrefix(resource_prefix, "piiRedactionemailProcessingLambdaLogGroup")
             ),
         )
         # Create a attachment processing Lambda function
         attachmentProcessing_Lambda = lambda_.Function(
             self, 
             "piiRedactionAttachmentProcessingLambda",
-            function_name=stackPrefix(resource_prefix, "piiRedactionAttachmentProcessingLambda"),
+            #function_name=stackPrefix(resource_prefix, "piiRedactionAttachmentProcessingLambda"),
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler="emailExtractRedact.lambda_handler",
             code=lambda_.Code.from_asset("./pii_redaction/lambda/attachmentProcessing"),
@@ -336,8 +337,8 @@ class ConsumerStack(Stack):
             },
             role=lambda_role,
             timeout=Duration.seconds(900),
-            log_group=logs.LogGroup(self, 'piiRedactionAttachmentProcessingLambdaLogGroup', 
-                log_group_name=stackPrefix(resource_prefix, "piiRedactionAttachmentProcessingLambdaLogGroup")
+            log_group=logs.LogGroup(self, 'piiRedactionAttachmentProcessingLambdaLogGroup'
+                #,log_group_name=stackPrefix(resource_prefix, "piiRedactionAttachmentProcessingLambdaLogGroup")
             ),
         )
         #subscribe to success to sns topic

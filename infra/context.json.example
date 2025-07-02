@@ -1,15 +1,15 @@
 {
   "resource_names": {
-    "vpc_id": "",
-    "raw_bucket": "",
-    "redacted_bucket_name": "",
-    "inventory_table_name": "",
-    "secret_name": "",
+    "vpc_id": "vpc-003558aa7cf7920f4",
+    "raw_bucket": "bedrock-blog-raw-bucket",
+    "redacted_bucket_name": "bedrock-blog-redacted-bucket",
+    "email_inventory_table_name": "bedrock-blog-email-inventory",
+    "secret_name": "SmtpCredentials",
     "auto_reply_from_email": "",
-    "domain": "",
+    "domain": "hdixit.people.aws.dev",
     "retention": 90,
-    "resource_name_prefix": "",
-    "environment": "development",
+    "resource_name_prefix": "idp",
+    "environment": "local",
     "oidc_audience": "",
     "oidc_jwks_uri": "",
     "oidc_issuer": "",
@@ -17,7 +17,6 @@
     "auth_type": "basic",
     "api_gateway_vpc_endpoint_id": "",
     "kms_cmk_arn": "",
-    "api_domain_name": "",
-    "api_domain_cert_arn": ""
+    "api_domain_name": ""
   }
 }
