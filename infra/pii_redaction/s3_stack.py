@@ -214,7 +214,8 @@ class S3Stack(Stack):
                          "ec2:DeleteNetworkInterface",
                          "bedrock:InvokeDataAutomationAsync",
                          "bedrock:GetDataAutomationStatus",
-                         "bedrock:ApplyGuardrail"],
+                         "bedrock:ApplyGuardrail",
+                         "bedrock:ListDataAutomationProjects"],
                 resources=["*"],
                 effect=iam.Effect.ALLOW
             )

@@ -56,11 +56,32 @@ class ConsumerStack(Stack):
         #create project with custom settings for bedrock data automation
         cfn_bda = bedrock.CfnDataAutomationProject(self, "piiRedactionBedrockProject",
                                                    project_name="piiBedrockDataAutomationProject",
-                                         standard_output_configuration=
-                                                {"Document": 
-                                                    {"Extraction": {"BoundingBox": {"State": "ENABLED"}, "Granularity": {"Types": ["PAGE", "ELEMENT", "WORD"]}},
-                                                     "OutputFormat": {"AdditionalFileFormat": {"State": "DISABLED"},"TextFormat": {"Types": ["PLAIN_TEXT"]}}}, 
-                                                 "Image": {"Extraction": {"BoundingBox": {"State": "ENABLED"}, "Category": {"State": "DISABLED"}}}})
+                                         standard_output_configuration = bedrock.CfnDataAutomationProject.StandardOutputConfigurationProperty(
+                                             document=bedrock.CfnDataAutomationProject.DocumentStandardOutputConfigurationProperty(
+                                                extraction=bedrock.CfnDataAutomationProject.DocumentStandardExtractionProperty(
+                                                    bounding_box=bedrock.CfnDataAutomationProject.DocumentBoundingBoxProperty(
+                                                                    state="ENABLED"
+                                                                ),
+                                                    granularity=bedrock.CfnDataAutomationProject.DocumentExtractionGranularityProperty(
+                                                                    types=["PAGE", "ELEMENT","WORD"]
+                                                                )
+                                                    ),
+                                                output_format=bedrock.CfnDataAutomationProject.DocumentOutputFormatProperty(
+                                                    additional_file_format=bedrock.CfnDataAutomationProject.DocumentOutputAdditionalFileFormatProperty(
+                                                          state="ENABLED"
+                                                    ),
+                                                    text_format=bedrock.CfnDataAutomationProject.DocumentOutputTextFormatProperty(
+                                                        types=["PLAIN_TEXT"]
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+        #                                         {"Document": 
+        #                                             {"Extraction": {"BoundingBox": {"State": "ENABLED"}, "Granularity": {"Types": ["PAGE", "ELEMENT", "WORD"]}},
+        #                                              "OutputFormat": {"AdditionalFileFormat": {"State": "DISABLED"},"TextFormat": {"Types": ["PLAIN_TEXT"]}}}, 
+        #                                          "Image": {"Extraction": {"BoundingBox": {"State": "ENABLED"}, "Category": {"State": "DISABLED"}}}})
+        # bedrock.
         #create bedrock guardrail to mask PII entities supported by bedrock guardrail currently
         cfn_guardrail = bedrock.CfnGuardrail(self, "piiRedactionGuardrail",
                             blocked_input_messaging="Guardrail applied based on the input.",
@@ -315,13 +336,11 @@ class ConsumerStack(Stack):
         attachmentProcessing_Lambda = lambda_.Function(
             self, 
             "piiRedactionAttachmentProcessingLambda",
-            #function_name=stackPrefix(resource_prefix, "piiRedactionAttachmentProcessingLambda"),
             runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="emailExtractRedact.lambda_handler",
+            handler="attachmentProcessing.lambda_handler",
             code=lambda_.Code.from_asset("./pii_redaction/lambda/attachmentProcessing"),
             memory_size=4096,
             vpc=vpc,
-            #vpc_subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
             security_groups=[security_group],
             layers=[layer_attachment_processing],
@@ -338,7 +357,6 @@ class ConsumerStack(Stack):
             role=lambda_role,
             timeout=Duration.seconds(900),
             log_group=logs.LogGroup(self, 'piiRedactionAttachmentProcessingLambdaLogGroup'
-                #,log_group_name=stackPrefix(resource_prefix, "piiRedactionAttachmentProcessingLambdaLogGroup")
             ),
         )
         #subscribe to success to sns topic

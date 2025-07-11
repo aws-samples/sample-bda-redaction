@@ -273,14 +273,12 @@ def process_success_message(message,profile_arn):
                 if file_type == 'pdf':
                     # Handle PDF
                     pii_entities = extract_pii_entities_from_pdf(bucket_name, attachment_key, profile_arn)
-                    print(pii_entities)
                     output_pdf_key = f"redacted/{date}/{case_id}/attachments/{file_name}"
                     redact_pdf(bucket_name, redacted_bucket, attachment_key, output_pdf_key, pii_entities)
 
                 elif file_type in ['jpg', 'jpeg', 'png']:
                     # Handle image formats directly
                     bounding_boxes = extract_pii_entities_from_images(bucket_name, attachment_key, profile_arn)
-                    print(bounding_boxes)
                     output_image_key = f"redacted/{date}/{case_id}/attachments/{file_name}"
                     redact_image(bucket_name, redacted_bucket, attachment_key, output_image_key, bounding_boxes, response)
                 else:
