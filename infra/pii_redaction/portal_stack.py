@@ -58,7 +58,6 @@ class PortalStack(Stack):
         #Import values from other stacks
         email_table_name = Fn.import_value("EmailInventoryTableName")
         email_table_arn = Fn.import_value("EmailInventoryTableArn")
-        forward_email_lambda_arn = Fn.import_value("ForwardingLambda")
         raw_bucket = Fn.import_value("RawBucket")
         redacted_bucket_name = Fn.import_value("RedactedBucket")
         security_group_id = Fn.import_value("SecurityGroupID")
@@ -282,7 +281,7 @@ class PortalStack(Stack):
         )
 
         # Lambda function for processing rules and categorizing messages in folders
-        rulesProcessingHandler = lambda_.Function(self, 'RulesProcessingHandler',
+        rules_processing_lambda = lambda_.Function(self, 'RulesProcessingHandler',
             function_name=stackPrefix(resource_prefix, "RulesProcessingHandler"),
             runtime=lambda_.Runtime.PYTHON_3_12,
             code=lambda_.Code.from_asset(os.path.join(os.path.dirname(__file__), 'lambda')),
@@ -306,11 +305,11 @@ class PortalStack(Stack):
             tracing=lambda_.Tracing.ACTIVE
         )
 
-        rules_processing_handler_role = rulesProcessingHandler.role
+        rules_processing_handler_role = rules_processing_lambda.role
         redacted_bucket.grant_read(rules_processing_handler_role)
-        rules_tbl.grant_read_data(rulesProcessingHandler)
-        messages_tbl.grant_read_data(rulesProcessingHandler)
-        messages_tbl.grant_write_data(rulesProcessingHandler)
+        rules_tbl.grant_read_data(rules_processing_lambda)
+        messages_tbl.grant_read_data(rules_processing_lambda)
+        messages_tbl.grant_write_data(rules_processing_lambda)
 
         rules_processing_handler_role.add_to_policy(iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
@@ -342,8 +341,7 @@ class PortalStack(Stack):
                 'MESSAGES_TABLE_NAME': email_table_name,
                 'FOLDERS_TABLE_NAME': folders_tbl.table_name,
                 'RULES_TABLE_NAME': rules_tbl.table_name,
-                'RULES_PROCESSING_LAMBDA_ARN': rulesProcessingHandler.function_arn,
-                'FORWARD_EMAIL_LAMBDA_ARN': forward_email_lambda_arn,
+                'RULES_PROCESSING_LAMBDA_ARN': rules_processing_lambda.function_arn,
                 'ENVIRONMENT': environment
             },
             layers=[powertools_layer, packages_layer],
@@ -520,8 +518,8 @@ class PortalStack(Stack):
             effect=iam.Effect.ALLOW,
             actions=['lambda:InvokeFunction'],
             resources=[
-                forward_email_lambda_arn,
-                f"{forward_email_lambda_arn}:*",
+                emailForwarding_Lambda.function_arn,
+                f"{emailForwarding_Lambda.function_arn}:*",
             ]
         ))
 
@@ -948,5 +946,3 @@ class PortalStack(Stack):
 
         if len(api_domain_name) > 0:
             self.apigw_domain_name_alias = CfnOutput(self, "ApiGwDomainNameAliasOutput", value=api_domain.domain_name_alias_domain_name, export_name="ApiGwDomainNameAlias")
-        
-        self.forwarding_lambda = CfnOutput(self, "ForwardingLambda", value=emailForwarding_Lambda.function_arn, export_name="ForwardingLambda")

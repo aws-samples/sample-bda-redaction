@@ -33,6 +33,13 @@ The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 cd infra
 ```
 
+**Optional:** Create and activate a new Python virutal environment
+
+```sh
+python3 -m venv .venv
+./.venv/bin/activate
+```
+
 ```sh
 pip install -r requirements.txt
 ```
@@ -44,12 +51,12 @@ cp context.json.example context.json
 
 Update the ```context.json``` file with the correct configuration options for the environment.
 
-| Property Name | Default | Description |
-| ------ | ---- | -------- |
-| vpc_id | | VPC ID where resources will be deployed |
-| raw_bucket | | S3 bucket storing raw messages and attachments |
-| redacted_bucket_name | | S3 bucket storing redacted messages and attachments |
-| inventory_table_name | | DynamoDB table name storing redacted message details |
+| Property Name | Default | Description | Created |
+| ------ | ---- | -------- | ---- |
+| vpc_id | | VPC ID where resources will be deployed | VPC needs to be created prior to execution |
+| raw_bucket | | S3 bucket storing raw messages and attachments | Created during CDK deployment |
+| redacted_bucket_name | | S3 bucket storing redacted messages and attachments | Created during CDK deployment |
+| inventory_table_name | | DynamoDB table name storing redacted message details | Created during CDK deployment |
 | resource_name_prefix | | Prefix used when naming resources during the stack creation |
 | retention | ```90``` | Number of days for retention of the messages in the redacted and raw S3 buckets |
 
@@ -97,24 +104,29 @@ Update packages (if necessary) by updating below 3 requirements files.
 Build the lambda layers
 
 ```sh
-cd infra/pii_redaction/lambda/lambda-layer
-chmod +x build_layer.sh
-./build_layer.sh
-```
+cd pii_redaction/lambda
 
-```sh
-cd infra/pii_redaction/lambda/attachmentProcessing/lambda-layer
+cd lambda-layer
 chmod +x build_layer.sh
 ./build_layer.sh
-```
 
-```sh
-cd infra/pii_redaction/lambda/emailProcessing/lambda-layer
+cd ..
+cd attachmentProcessing/lambda-layer
 chmod +x build_layer.sh
 ./build_layer.sh
+
+cd ../..
+cd emailProcessing/lambda-layer
+chmod +x build_layer.sh
+./build_layer.sh
+
+# Navigate back to the root of the infra directory
+cd ../../../
 ```
 
 #### Deploy Infrastructure
+
+Run the following commands from the root of the ```infra``` directory:
 
 Bootstrap the AWS account to use AWS CDK
 ```sh
@@ -145,7 +157,7 @@ cdk deploy [resource_name_prefix]-PortalStack
 
 ### API Gateway Custom Domain Setup
 
-This is needed for deployment within a non-production or production environment.
+This is needed for deployment within a non-production or production environment. Within your AWS Console, navigate to API Gateway and click on _Custom domain names_ link in the API Gateway navigation menu on the left-hand side of the screen. [Learn more information about API Gateway custom domain names](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html?icmpid=apigateway_console_help)
 
 1. Enter the name of the domain or subdomain
 2. Select the "Private" option
@@ -175,7 +187,7 @@ Deployment failures will always rollback the current deployment and return the C
 
 ## Portal
 
-The installation of the portal is completely optional. It is only required if you want a user interface to view the redacted emails.
+**IMPORTANT:** The installation of the portal is completely optional. It is only required if you want a user interface to view the redacted emails. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
 
 ### Install Prerequisites
 
@@ -190,7 +202,11 @@ The portal is protected by Basic Authentication or authentication using OIDC. Wh
 
 ### Environment Variables
 
-Update the following variables in the ```app/.env``` file (by copying the ```app/.env.example``` file to ```app/.env```)
+Navigate to the root of the ```app``` directory and update the following variables in the ```.env``` file (by copying the ```.env.example``` file to ```.env```) using the following command to create the ```.env``` file:
+
+```sh
+cp .env.example .env
+```
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
@@ -235,18 +251,14 @@ Control the OIDC logout flow by assigning values to the following environment va
 
 ### Local Development
 
-Run the local development server by running the following commands:
-
-```sh
-cd app
-```
+Navigate to the root of the ```app``` directory before running any of the following commands to run the local development server by running the following commands:
 
 - Install NPM packages
 ```sh
 npm install
 ```
 
-- Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above:
+- Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above (if you have not performed this action previously):
 ```sh
 cp .env.example .env
 ```
@@ -270,14 +282,14 @@ By default, the preview of the production build will run locally on port **4173*
 
 ### Production Deployment
 
-Perform the following steps to build this application for production
+Navigate to the root of the ```app``` directory before running any of the following commands to build this application for production by running the following commands:
 
 - Install NPM packages
 ```sh
 npm install
 ```
 
-- Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above:
+- Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above (if you have not performed this action previously):
 ```sh
 cp .env.example .env
 ```
