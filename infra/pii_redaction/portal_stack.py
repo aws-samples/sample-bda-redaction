@@ -543,7 +543,7 @@ class PortalStack(Stack):
             ]
         ))
 
-        rulesProcessingHandler.grant_invoke(portal_api_handler_role)
+        rules_processing_lambda.grant_invoke(portal_api_handler_role)
         messages_tbl.grant_read_write_data(portal_api_handler_role)
         folders_tbl.grant_read_write_data(portal_api_handler_role)
         rules_tbl.grant_read_write_data(portal_api_handler_role)
