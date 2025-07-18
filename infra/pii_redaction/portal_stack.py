@@ -880,7 +880,7 @@ class PortalStack(Stack):
                 year='*',
                 time_zone=TimeZone.AMERICA_NEW_YORK
             ),
-            target=targets.LambdaInvoke(rulesProcessingHandler),
+            target=targets.LambdaInvoke(rules_processing_lambda),
             description='Runs daily at 2:00 AM EST to process rules',
             enabled=True,
             schedule_name=stackPrefix(resource_prefix, "RulesProcessingSchedule"),
