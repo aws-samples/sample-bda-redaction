@@ -164,7 +164,6 @@ class PortalStack(Stack):
 
         # DynamoDB data plane logging to CloudTrail
         dynamo_trail_bucket = s3.Bucket(self, 'DynamodbDataPlaneTrailBucket',
-            bucket_name=stackPrefix(resource_prefix, 'dynamodb-data-plane-trail'),
             removal_policy=RemovalPolicy.RETAIN,
             auto_delete_objects=False,
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -369,6 +368,18 @@ class PortalStack(Stack):
             ]
         )
 
+        email_forwarding_lambda_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["ec2:DescribeInstances",
+                         "ec2:CreateNetworkInterface",
+                         "ec2:AttachNetworkInterface",
+                         "ec2:DescribeNetworkInterfaces",
+                         "ec2:DeleteNetworkInterface"],
+                resources=["*"],
+                effect=iam.Effect.ALLOW
+            )
+        )
+
         # Add inline policies for S3 PutObject, ListBucket, and Comprehend DetectPiiEntities/RedactPiiEntities
         email_forwarding_lambda_role.add_to_policy(
             iam.PolicyStatement(
@@ -400,7 +411,7 @@ class PortalStack(Stack):
         )
 
         # Create a email forwarding Lambda function
-        emailForwarding_Lambda = lambda_.Function(
+        email_forwarding_lambda = lambda_.Function(
             self, 
             "piiRedactionemailForwardingLambda",
             function_name=stackPrefix(resource_prefix, "piiRedactionemailForwardingLambda"),
@@ -417,9 +428,7 @@ class PortalStack(Stack):
             },
             role=email_forwarding_lambda_role,
             timeout=Duration.seconds(900),
-            log_group=logs.LogGroup(self, 'piiRedactionemailForwardingLambdaLogGroup', 
-                log_group_name=stackPrefix(resource_prefix, "piiRedactionemailForwardingLambdaLogGroup")
-            ),
+            log_group=logs.LogGroup(self, 'piiRedactionemailForwardingLambdaLogGroup'),
         )
 
         # Lambda function that is the authorizer for the API Gateway
@@ -518,8 +527,8 @@ class PortalStack(Stack):
             effect=iam.Effect.ALLOW,
             actions=['lambda:InvokeFunction'],
             resources=[
-                emailForwarding_Lambda.function_arn,
-                f"{emailForwarding_Lambda.function_arn}:*",
+                email_forwarding_lambda.function_arn,
+                f"{email_forwarding_lambda.function_arn}:*",
             ]
         ))
 

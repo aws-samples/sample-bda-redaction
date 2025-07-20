@@ -121,7 +121,7 @@ chmod +x build_layer.sh
 ./build_layer.sh
 
 # Navigate back to the root of the infra directory
-cd ../../../
+cd ../../../..
 ```
 
 #### Deploy Infrastructure
