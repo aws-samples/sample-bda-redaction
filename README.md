@@ -13,19 +13,20 @@ This application requires the installation of the following software tools:
 
 VPC with 3 private subnets with no internet access
 
-Setup Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer below links.
+Setup Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
 
-https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html
-
-https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html
+* [Request SES Production Access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
+* [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html)
 
 
 Create credentials for SMTP and save it in secrets manager secret with name "SmtpCredentials". If using any other name for secret update the context.json line "secret_name" with the name of the secret created.
 Key for the user name in the secret should be "smtp_username" and key for password should be "smtp_password" when storing the same in secrets manager
 
-https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html
+[Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
 
-### Production Deployment
+### Deployment
+
+Run all of the following commands from within a terminal/CLI environment which can include [AWS CloudShell](https://aws.amazon.com/cloudshell/).
 
 The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 
@@ -95,7 +96,7 @@ The following set of configuration variables are optional:
 
 #### Update Lambda Layer that contains additional PyPI packages
 
-Update packages (if necessary) by updating below 3 requirements files.
+Update packages (if necessary) by updating the 3 requirements files listed below:
 
 1. ```infra/pii_redaction/lambda/lambda-layer/requirements.txt```
 2. ```infra/pii_redaction/lambda/emailProcessing/lambda-layer/requirements.txt```
@@ -143,7 +144,7 @@ The generated CloudFormation templates should be run in the account(s) where the
 
 ### Local Deployment
 
-If you are deploying the through a local environment that is outside of a pipeline, follow the instructions from the **Production Deployment** section. After those steps have been completed, run:
+If you are deploying the through a local environment that is outside of a pipeline, follow the instructions from the **Deployment** section. After those steps have been completed, run:
 
 ```sh
 cdk deploy [resource_name_prefix]-S3Stack [resource_name_prefix]-ConsumerStack
@@ -202,7 +203,7 @@ The portal is protected by Basic Authentication or authentication using OIDC. Wh
 
 ### Environment Variables
 
-Navigate to the root of the ```app``` directory and update the following variables in the ```.env``` file (by copying the ```.env.example``` file to ```.env```) using the following command to create the ```.env``` file:
+Navigate to the root of the ```app``` directory and update the following variables in the ```.env``` file (by copying the ```.env.example``` file to ```.env```) using the following command to create the ```.env``` file using a terminal/CLI or AWS CloudShell:
 
 ```sh
 cp .env.example .env
@@ -251,6 +252,8 @@ Control the OIDC logout flow by assigning values to the following environment va
 
 ### Local Development
 
+Run all of the following commands from within a terminal/CLI environment which can include [AWS CloudShell](https://aws.amazon.com/cloudshell/).
+
 Navigate to the root of the ```app``` directory before running any of the following commands to run the local development server by running the following commands:
 
 - Install NPM packages
@@ -281,6 +284,8 @@ npm run preview
 By default, the preview of the production build will run locally on port **4173**. If you need [to customize the port, you can follow these instructions](https://vite.dev/guide/cli#vite-preview).
 
 ### Production Deployment
+
+Run all of the following commands from within a terminal environment which can include [AWS CloudShell](https://aws.amazon.com/cloudshell/).
 
 Navigate to the root of the ```app``` directory before running any of the following commands to build this application for production by running the following commands:
 
