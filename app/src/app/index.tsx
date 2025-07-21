@@ -1,4 +1,4 @@
-// © 2024 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
+// © 2025 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
 //
 // This AWS Content is provided subject to the terms of the AWS Customer Agreement
 // available at http://aws.amazon.com/agreement or other written agreement between
@@ -51,9 +51,14 @@ const oidcConfig = {
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AuthProvider {...oidcConfig}>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  </React.StrictMode>,
+  (import.meta.env.VITE_OIDC_DOMAIN !== "")
+    ?
+      <React.StrictMode>
+        <AuthProvider {...oidcConfig}>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </React.StrictMode>
+    : <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
 )

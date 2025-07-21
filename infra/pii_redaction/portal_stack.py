@@ -449,7 +449,7 @@ class PortalStack(Stack):
             # Secret that contains the Basic Auth credentials to access the portal
             secret = secretsmanager.Secret(self, 'PiiRedactionPortalAuthSecret',
                 secret_name=stackPrefix(resource_prefix, "PiiRedactionPortalAuthSecret"),
-                description='Credentials for AT&T Email Portal application',
+                description='Credentials for PII Redaction using Amazon Bedrock portal application',
                 generate_secret_string=secretsmanager.SecretStringGenerator(
                     secret_string_template=json.dumps({'username': 'pii_redaction_email_admin'}),
                     generate_string_key='password',
@@ -608,7 +608,7 @@ class PortalStack(Stack):
 
         api = apigateway.RestApi(self, 'PiiRedactionInfraAPI',
             rest_api_name=stackPrefix(resource_prefix, "PiiRedactionInfraAPI"),
-            description='API for AT&T OOP-CIP replacement application',
+            description='API for PII Redaction using Amazon Bedrock portal',
             deploy=True,
             deploy_options=apigateway.StageOptions(
                 stage_name='portal',

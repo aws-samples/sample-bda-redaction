@@ -9,12 +9,6 @@ import CreateRule from '../feature/rules/components/create/CreateRule.tsx';
 import ListRules from '../feature/rules/components/list/ListRules.tsx';
 
 export const router = createBrowserRouter([
-  /* {
-    path: `/${import.meta.env.VITE_BASE}/login`,
-    element: <AuthPage />,
-    errorElement: <ErrorPage />,
-    handle: "Auth"
-  }, */
   {
     path: import.meta.env.VITE_BASE,
     element: <App />,

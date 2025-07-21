@@ -1,4 +1,4 @@
-// © 2024 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
+// © 2025 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
 //
 // This AWS Content is provided subject to the terms of the AWS Customer Agreement
 // available at http://aws.amazon.com/agreement or other written agreement between
@@ -9,7 +9,7 @@ import { useAuth } from "react-oidc-context";
 import logoUrl from "../../../../assets/aws_logo.png";
 
 function AppHeader() {
-  const auth = useAuth();
+  const auth = useAuth() ?? null;
 
   const getLogoutUrl = () => {
     const returnUrl = (import.meta.env.VITE_OIDC_LOGOUT_RETURN_URL !== "")
@@ -27,13 +27,13 @@ function AppHeader() {
     <TopNavigation
       identity={{
         href: "#",
-        title: "AT&T Office of the President Email Compliance Intake Platform Portal",
+        title: "PII Redaction using Amazon Bedrock",
         logo: {
           src: logoUrl,
           alt: "Service"
         },
       }}
-      utilities={[
+      utilities={(auth) ? [
         {
           type: "button",
           text: "Logout",
@@ -51,7 +51,7 @@ function AppHeader() {
           iconName: "user-profile",
           items: []
         }
-      ]}
+      ] : []}
     />
   )
 }

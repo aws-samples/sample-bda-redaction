@@ -211,7 +211,7 @@ cp .env.example .env
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
-| VITE_APIGW | | URL of API Gateway (without the path part) | Yes
+| VITE_APIGW | | URL of API Gateway (without the path part of "/portal") generated in the PortalStack CloudFormation stack | Yes
 
 Authentication through OpenID Connect (OIDC) requires the following environment variables to be set. Otherwise, they are optional if using Basic Access Authentication.
 

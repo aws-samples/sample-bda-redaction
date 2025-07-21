@@ -28,71 +28,85 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const auth = useAuth();
+  const auth = useAuth() ?? null;
 
   axios.defaults.baseURL = `${import.meta.env.VITE_APIGW}${import.meta.env.VITE_BASE}${import.meta.env.VITE_API_PATH}`;
   axios.defaults.timeout = 30000;
   axios.defaults.headers.common = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${auth.user?.id_token}`
+    ...(auth && {
+      'Authorization': `Bearer ${auth.user?.id_token}`
+    })
   };
 
-  switch(auth.activeNavigator) {
-    case "signinSilent":
+  if(auth) {
+    switch(auth.activeNavigator) {
+      case "signinSilent":
+        return (
+          <Box variant="p" padding={{horizontal: "l", vertical: "l"}}>
+            <StatusIndicator type="loading">
+              Signing you in...
+            </StatusIndicator>
+          </Box>
+        )
+      case "signoutRedirect":
+        return (
+          <Box variant="p" padding={{horizontal: "l", vertical: "l"}}>
+            <StatusIndicator type="loading">
+              Signing you out...
+            </StatusIndicator>
+          </Box>
+        );
+    }
+
+    if(auth.isLoading) {
       return (
         <Box variant="p" padding={{horizontal: "l", vertical: "l"}}>
           <StatusIndicator type="loading">
-            Signing you in...
-          </StatusIndicator>
-        </Box>
-      )
-    case "signoutRedirect":
-      return (
-        <Box variant="p" padding={{horizontal: "l", vertical: "l"}}>
-          <StatusIndicator type="loading">
-            Signing you out...
+            Loading
           </StatusIndicator>
         </Box>
       );
-  }
+    }
 
-  if(auth.isLoading) {
+    if(auth.error) {
+      return <div>Oops... {auth.error.message}</div>;
+    }
+
+    if(auth.isAuthenticated) {
+      return (
+        <I18nProvider locale='en' messages={[enMessages]}>
+          <QueryClientProvider client={queryClient}>
+            <AppHeader/>
+            <AppCustomLayout />
+            <AppFooter />
+          </QueryClientProvider>
+        </I18nProvider>
+      );
+    }
+
     return (
-      <Box variant="p" padding={{horizontal: "l", vertical: "l"}}>
-        <StatusIndicator type="loading">
-          Loading
-        </StatusIndicator>
+      <Box textAlign="center" padding={{horizontal: "xxxl", vertical: "xxxl"}}>
+        <SpaceBetween size="l" direction="vertical">
+          <Box variant="h1">
+            PII Redaction using Amazon Bedrock
+          </Box>
+          <Button onClick={() => auth.signinRedirect({
+            redirectMethod: 'replace',
+          })} variant="primary">Login</Button>
+        </SpaceBetween>
       </Box>
     );
   }
 
-  if(auth.error) {
-    return <div>Oops... {auth.error.message}</div>;
-  }
-
-  if(auth.isAuthenticated) {
-    return (
-      <I18nProvider locale='en' messages={[enMessages]}>
-        <QueryClientProvider client={queryClient}>
-          <AppHeader/>
-          <AppCustomLayout />
-          <AppFooter />
-        </QueryClientProvider>
-      </I18nProvider>
-    )
-  }
-
   return (
-    <Box textAlign="center" padding={{horizontal: "xxxl", vertical: "xxxl"}}>
-      <SpaceBetween size="l" direction="vertical">
-        <Box variant="h1">
-          AT&T Office of the President<br /> Email Compliance Intake Platform Portal
-        </Box>
-        <Button onClick={() => auth.signinRedirect({
-          redirectMethod: 'replace',
-        })} variant="primary">Login</Button>
-      </SpaceBetween>
-    </Box>
+    <I18nProvider locale='en' messages={[enMessages]}>
+      <QueryClientProvider client={queryClient}>
+        <AppHeader/>
+        <AppCustomLayout />
+        <AppFooter />
+      </QueryClientProvider>
+    </I18nProvider>
   );
 }
 
