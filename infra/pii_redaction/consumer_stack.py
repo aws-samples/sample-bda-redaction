@@ -371,84 +371,85 @@ class ConsumerStack(Stack):
             s3n.LambdaDestination(emailProcessing_Lambda),
             s3.NotificationKeyFilter(prefix="domain_emails/")
         )
-        # Create SES Rule Set and Rule for Incoming Emails
-        rule_set = ses.CfnReceiptRuleSet(self, "RuleSet", rule_set_name=stackPrefix(resource_prefix, "rule-set"))
-        # Define the receipt rule
-        receipt_rule = ses.CfnReceiptRule(
-            self,
-            "EmailReceiptRule",
-            rule_set_name=rule_set.rule_set_name,
-            rule={
-                "name": "emailProcessingRule",
-                "enabled": True,
-                "scan_enabled": True,
-                "recipients": [f"{domain}"],
-                "actions": [
-                    # Store email in S3
-                    {
-                        "s3Action": {
-                            "bucketName": raw_bucket_name,
-                            "objectKeyPrefix": "domain_emails/",
-                            "iam_role_arn": ses_role_arn
+        if domain != "":
+            # Create SES Rule Set and Rule for Incoming Emails
+            rule_set = ses.CfnReceiptRuleSet(self, "RuleSet", rule_set_name=stackPrefix(resource_prefix, "rule-set"))
+            # Define the receipt rule
+            receipt_rule = ses.CfnReceiptRule(
+                self,
+                "EmailReceiptRule",
+                rule_set_name=rule_set.rule_set_name,
+                rule={
+                    "name": "emailProcessingRule",
+                    "enabled": True,
+                    "scan_enabled": True,
+                    "recipients": [f"{domain}"],
+                    "actions": [
+                        # Store email in S3
+                        {
+                            "s3Action": {
+                                "bucketName": raw_bucket_name,
+                                "objectKeyPrefix": "domain_emails/",
+                                "iam_role_arn": ses_role_arn
+                            }
                         }
-                    }
-                ]
-            }
-        )
-        # Set dependency to ensure rule set is created before the rule
-        receipt_rule.node.add_dependency(rule_set)
-        # Step 3: Lambda function to activate the rule set
-        activate_rule_set_lambda = lambda_.Function(
-            self,
-            "ActivateRuleSetLambda",
-            runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="index.handler",
-            code=lambda_.Code.from_inline(
-                """
-import boto3
-def handler(event, context):
-    client = boto3.client('ses')
-    rule_set_name = event['rule_set_name']
-    # Set the rule set as active
-    client.set_active_receipt_rule_set(RuleSetName=rule_set_name)
-
-    return {"status": "Activated", "rule_set_name": rule_set_name}
-                """
-            ),
-            timeout=Duration.seconds(900),
-        )
-        # Trigger Lambda to activate the rule set
-        custom_resource = cr.AwsCustomResource(
-            self,
-            "ActivateRuleSet",
-            policy=cr.AwsCustomResourcePolicy.from_statements([
-                iam.PolicyStatement(
-                    actions=["ses:SetActiveReceiptRuleSet"],
-                    resources=["*"]
-                ),
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    actions=["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-                    resources=["arn:aws:logs:*:*:*"],
-                ),
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    actions=["lambda:InvokeFunction"],
-                    resources=[activate_rule_set_lambda.function_arn],
-                )
-            ]),
-            on_create=cr.AwsSdkCall(
-                action="invoke",
-                service="Lambda",
-                region=self.region,
-                parameters={
-                    "FunctionName": activate_rule_set_lambda.function_name,
-                    "InvocationType": "RequestResponse",
-                    "Payload": "{\"rule_set_name\": \"" + rule_set.rule_set_name + "\"}"
-                },
-                physical_resource_id=cr.PhysicalResourceId.of("ActivateRuleSet"),
+                    ]
+                }
             )
-        )
+            # Set dependency to ensure rule set is created before the rule
+            receipt_rule.node.add_dependency(rule_set)
+            # Step 3: Lambda function to activate the rule set
+            activate_rule_set_lambda = lambda_.Function(
+                self,
+                "ActivateRuleSetLambda",
+                runtime=lambda_.Runtime.PYTHON_3_12,
+                handler="index.handler",
+                code=lambda_.Code.from_inline(
+                    """
+    import boto3
+    def handler(event, context):
+        client = boto3.client('ses')
+        rule_set_name = event['rule_set_name']
+        # Set the rule set as active
+        client.set_active_receipt_rule_set(RuleSetName=rule_set_name)
+
+        return {"status": "Activated", "rule_set_name": rule_set_name}
+                    """
+                ),
+                timeout=Duration.seconds(900),
+            )
+            # Trigger Lambda to activate the rule set
+            custom_resource = cr.AwsCustomResource(
+                self,
+                "ActivateRuleSet",
+                policy=cr.AwsCustomResourcePolicy.from_statements([
+                    iam.PolicyStatement(
+                        actions=["ses:SetActiveReceiptRuleSet"],
+                        resources=["*"]
+                    ),
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+                        resources=["arn:aws:logs:*:*:*"],
+                    ),
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=["lambda:InvokeFunction"],
+                        resources=[activate_rule_set_lambda.function_arn],
+                    )
+                ]),
+                on_create=cr.AwsSdkCall(
+                    action="invoke",
+                    service="Lambda",
+                    region=self.region,
+                    parameters={
+                        "FunctionName": activate_rule_set_lambda.function_name,
+                        "InvocationType": "RequestResponse",
+                        "Payload": "{\"rule_set_name\": \"" + rule_set.rule_set_name + "\"}"
+                    },
+                    physical_resource_id=cr.PhysicalResourceId.of("ActivateRuleSet"),
+                )
+            )
 
         # cdk-nag
         # NagSuppressions.add_resource_suppressions(
