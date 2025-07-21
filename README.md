@@ -81,8 +81,8 @@ The following set of configuration variables are only required if ```auth_type``
 
 Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional:
 
-| Property Name | Default | Description | Comment
-| ------ | ---- | -------- |
+| Property Name | Default | Description | Comment |
+| ------ | ---- | -------- | ---------|
 | domain | | The domain name that is used for AWS SES | This can be left blank if not setting up Amazon SES
 | auto_reply_from_email | | Email address of the "from" field of the email message | This can be left blank if not setting up the Portal
 | secret_name | | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | This can be left blank if not setting up the Portal
