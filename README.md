@@ -13,7 +13,7 @@ This application requires the installation of the following software tools:
 
 VPC with 3 private subnets with no internet access
 
-**Below Amazon SES Setup is optional. One can test the code without this setup as well. Code however expects email file to test the solution. To test the solution without setting up Amazon SES we should upload email file to be redacted to the raw S3 bucket created as part of CDK deployment under the folder domain_emails inside the bucket**
+**Below Amazon SES Setup is optional. One can test the code without this setup as well. Code however expects email file to test the solution. To test the solution without setting up Amazon SES we should upload email file to be redacted to the raw S3 bucket created as part of CDK deployment under the folder domain_emails inside the bucket. Move directly to Deployment section if not using Amazon SES**
 
 Setup Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
 
