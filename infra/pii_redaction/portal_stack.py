@@ -357,79 +357,80 @@ class PortalStack(Stack):
             tracing=lambda_.Tracing.ACTIVE
         )
 
-        # Create an IAM role for the Lambda function
-        email_forwarding_lambda_role = iam.Role(
-            self, 
-            "piiRedactionForwardingLambdaRole",
-            role_name=stackPrefix(resource_prefix, "piiRedactionForwardingLambdaRole"),
-            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole")
-            ]
-        )
-
-        email_forwarding_lambda_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=["ec2:DescribeInstances",
-                         "ec2:CreateNetworkInterface",
-                         "ec2:AttachNetworkInterface",
-                         "ec2:DescribeNetworkInterfaces",
-                         "ec2:DeleteNetworkInterface"],
-                resources=["*"],
-                effect=iam.Effect.ALLOW
-            )
-        )
-
-        # Add inline policies for S3 PutObject, ListBucket, and Comprehend DetectPiiEntities/RedactPiiEntities
-        email_forwarding_lambda_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=["s3:GetObject","s3:PutObject", "s3:ListBucket","s3:PutBucketNotification"],
-                resources=[
-                    f"arn:aws:s3:::{raw_bucket}",
-                    f"arn:aws:s3:::{raw_bucket}/*",
-                    f"arn:aws:s3:::{redacted_bucket}",
-                    f"arn:aws:s3:::{redacted_bucket}/*"
-                ],
-                effect=iam.Effect.ALLOW
-            )
-        )
-
-        email_forwarding_lambda_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=["secretsmanager:GetSecretValue"],
-                resources=[f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{secret_name}*"],
-                effect=iam.Effect.ALLOW
-            )
-        )
-
-        email_forwarding_lambda_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=["dynamodb:UpdateItem","dynamodb:GetItem","dynamodb:PutItem"],
-                resources=[email_table_arn],
-                effect=iam.Effect.ALLOW
-            )
-        )
-
         # Create a email forwarding Lambda function
-        email_forwarding_lambda = lambda_.Function(
-            self, 
-            "piiRedactionemailForwardingLambda",
-            function_name=stackPrefix(resource_prefix, "piiRedactionemailForwardingLambda"),
-            runtime=lambda_.Runtime.PYTHON_3_12,
-            handler="emailForwarding.lambda_handler",
-            code=lambda_.Code.from_asset("./pii_redaction/lambda/emailForwarding"),
-            vpc=vpc,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-            security_groups=[security_group],
-            environment={
-                "INVENTORY_TABLE_NAME": email_table_name,
-                "SECRET_NAME": secret_name,
-                "AUTO_REPLY_FROM_EMAIL": auto_reply_from_email
-            },
-            role=email_forwarding_lambda_role,
-            timeout=Duration.seconds(900),
-            log_group=logs.LogGroup(self, 'piiRedactionemailForwardingLambdaLogGroup'),
-        )
+        if auto_reply_from_email != "":
+            # Create an IAM role for the Lambda function
+            email_forwarding_lambda_role = iam.Role(
+                self, 
+                "piiRedactionForwardingLambdaRole",
+                role_name=stackPrefix(resource_prefix, "piiRedactionForwardingLambdaRole"),
+                assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+                managed_policies=[
+                    iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole")
+                ]
+            )
+
+            email_forwarding_lambda_role.add_to_policy(
+                iam.PolicyStatement(
+                    actions=["ec2:DescribeInstances",
+                            "ec2:CreateNetworkInterface",
+                            "ec2:AttachNetworkInterface",
+                            "ec2:DescribeNetworkInterfaces",
+                            "ec2:DeleteNetworkInterface"],
+                    resources=["*"],
+                    effect=iam.Effect.ALLOW
+                )
+            )
+
+            # Add inline policies for S3 PutObject, ListBucket, and Comprehend DetectPiiEntities/RedactPiiEntities
+            email_forwarding_lambda_role.add_to_policy(
+                iam.PolicyStatement(
+                    actions=["s3:GetObject","s3:PutObject", "s3:ListBucket","s3:PutBucketNotification"],
+                    resources=[
+                        f"arn:aws:s3:::{raw_bucket}",
+                        f"arn:aws:s3:::{raw_bucket}/*",
+                        f"arn:aws:s3:::{redacted_bucket}",
+                        f"arn:aws:s3:::{redacted_bucket}/*"
+                    ],
+                    effect=iam.Effect.ALLOW
+                )
+            )
+
+            email_forwarding_lambda_role.add_to_policy(
+                iam.PolicyStatement(
+                    actions=["secretsmanager:GetSecretValue"],
+                    resources=[f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{secret_name}*"],
+                    effect=iam.Effect.ALLOW
+                )
+            )
+
+            email_forwarding_lambda_role.add_to_policy(
+                iam.PolicyStatement(
+                    actions=["dynamodb:UpdateItem","dynamodb:GetItem","dynamodb:PutItem"],
+                    resources=[email_table_arn],
+                    effect=iam.Effect.ALLOW
+                )
+            )
+            
+            email_forwarding_lambda = lambda_.Function(
+                self, 
+                "piiRedactionemailForwardingLambda",
+                function_name=stackPrefix(resource_prefix, "piiRedactionemailForwardingLambda"),
+                runtime=lambda_.Runtime.PYTHON_3_12,
+                handler="emailForwarding.lambda_handler",
+                code=lambda_.Code.from_asset("./pii_redaction/lambda/emailForwarding"),
+                vpc=vpc,
+                vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+                security_groups=[security_group],
+                environment={
+                    "INVENTORY_TABLE_NAME": email_table_name,
+                    "SECRET_NAME": secret_name,
+                    "AUTO_REPLY_FROM_EMAIL": auto_reply_from_email
+                },
+                role=email_forwarding_lambda_role,
+                timeout=Duration.seconds(900),
+                log_group=logs.LogGroup(self, 'piiRedactionemailForwardingLambdaLogGroup'),
+            )
 
         # Lambda function that is the authorizer for the API Gateway
         lambda_auth_security_group = ec2.SecurityGroup(self, "LambdaAuthSecurityGroup",
@@ -523,14 +524,15 @@ class PortalStack(Stack):
             iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaVPCAccessExecutionRole")
         )
 
-        portal_api_handler_role.add_to_policy(iam.PolicyStatement(
-            effect=iam.Effect.ALLOW,
-            actions=['lambda:InvokeFunction'],
-            resources=[
-                email_forwarding_lambda.function_arn,
-                f"{email_forwarding_lambda.function_arn}:*",
-            ]
-        ))
+        if auto_reply_from_email != "":
+            portal_api_handler_role.add_to_policy(iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=['lambda:InvokeFunction'],
+                resources=[
+                    email_forwarding_lambda.function_arn,
+                    f"{email_forwarding_lambda.function_arn}:*",
+                ]
+            ))
 
         portal_api_handler_role.add_to_policy(iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
