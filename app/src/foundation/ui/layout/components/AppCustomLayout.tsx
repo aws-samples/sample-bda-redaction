@@ -118,12 +118,13 @@ function AppCustomLayout() {
                   text: "Folders",
                   href: `${import.meta.env.VITE_BASE}/folders`
                 },
-                {
+              ].concat(
+                (import.meta.env.VITE_EMAIL_ENABLED === "true") ? [{
                   type: "link",
                   text: "Rules",
                   href: `${import.meta.env.VITE_BASE}/rules`
-                }
-              ]
+                }] : []
+              )
             },
             {type: "divider"},
             {

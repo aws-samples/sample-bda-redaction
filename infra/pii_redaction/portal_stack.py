@@ -636,7 +636,7 @@ class PortalStack(Stack):
             cloud_watch_role=True,
             cloud_watch_role_removal_policy=RemovalPolicy.DESTROY,
             endpoint_configuration=apigateway.EndpointConfiguration(
-                types=[apigateway.EndpointType.PRIVATE],
+                types=[apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE],
                 vpc_endpoints=[apigw_endpoint]
             ),
             policy=iam.PolicyDocument(
@@ -670,15 +670,15 @@ class PortalStack(Stack):
             )
         )
 
-        # private_hosting_bucket.add_to_resource_policy(iam.PolicyStatement(
-        #     effect=iam.Effect.ALLOW,
-        #     actions=["s3:GetObject", "s3:ListBucket"],
-        #     resources=[
-        #         private_hosting_bucket.bucket_arn,
-        #         f"{private_hosting_bucket.bucket_arn}/*"
-        #     ],
-        #     principals=[iam.ServicePrincipal("apigateway.amazonaws.com")]
-        # ))
+        private_hosting_bucket.add_to_resource_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=["s3:GetObject", "s3:ListBucket"],
+            resources=[
+                private_hosting_bucket.bucket_arn,
+                f"{private_hosting_bucket.bucket_arn}/*"
+            ],
+            principals=[iam.ServicePrincipal("apigateway.amazonaws.com")]
+        ))
 
         portal_lambda_handler.add_permission('ApiGatewayInvokeLambdaPermission',
             principal=iam.ServicePrincipal('apigateway.amazonaws.com'),

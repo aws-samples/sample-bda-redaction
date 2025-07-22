@@ -229,10 +229,13 @@ function ListMessages() {
                   outletCtx.setActiveDrawer([]);
                   outletCtx.setActiveDrawerId("");
                 }} />
-                <RoutedButton variant="normal" buttonText="Add Filtering Rule" href="/rules/create" onClick={() => {
-                  outletCtx.setActiveDrawer([]);
-                  outletCtx.setActiveDrawerId("");
-                }} />
+                {
+                   (import.meta.env.VITE_EMAIL_ENABLED === "true") &&
+                  <RoutedButton variant="normal" buttonText="Add Filtering Rule" href="/rules/create" onClick={() => {
+                    outletCtx.setActiveDrawer([]);
+                    outletCtx.setActiveDrawerId("");
+                  }} />
+                }
                 {
                   messages.data && messages.data?.length > 0 &&
                   <Button variant="primary" iconName="download" disabled={isExportMessagePending} onClick={() => mutate({case_id: items?.map(message => message.CaseID) ?? []})}>Export</Button>

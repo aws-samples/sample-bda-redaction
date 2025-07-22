@@ -14,11 +14,12 @@ This application requires the installation of the following software tools:
 
 VPC with 3 private subnets with no internet access
 
+**Below Amazon SES Setup is optional. One can test the code without this setup as well. Code however expects email file to test the solution. To test the solution without setting up Amazon SES we should upload email file to be redacted to the raw S3 bucket created as part of CDK deployment under the folder domain_emails inside the bucket. Move directly to Deployment section if not using Amazon SES**
+
 Setup Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
 
 * [Request SES Production Access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 * [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html)
-
 
 Create credentials for SMTP and save it in secrets manager secret with name "SmtpCredentials". If using any other name for secret update the context.json line "secret_name" with the name of the secret created.
 Key for the user name in the secret should be "smtp_username" and key for password should be "smtp_password" when storing the same in secrets manager
@@ -64,10 +65,10 @@ Update the ```context.json``` file with the correct configuration options for th
 
 The following properties are only required when the portal is being provisioned:
 
-| Property Name | Default | Description |
-| ------ | ---- | -------- |
-| environment | ```development``` | The type of environment where resources will be provisioned. Valid options are ```local```, ```development```, ```production``` |
-| auth_type | ```basic``` | The type of authentication used. Values are either ```oidc``` or ```basic``` |
+| Property Name | Default | Description | Comments |
+| ------ | ---- | -------- | ----- |
+| environment | ```development``` | The type of environment where resources will be provisioned. Values are ```local```, ```development```, ```production``` | Setting this property to ```local``` will make create a regional API Gateway. Otherwise, it will be a Private API Gateway |
+| auth_type | ```basic``` | The type of authentication used. Values are either ```oidc``` or ```basic``` | |
 
 The following set of configuration variables are only required if ```auth_type``` is set to ```oidc``` and the portal is being provisioned:
 
@@ -80,11 +81,11 @@ The following set of configuration variables are only required if ```auth_type``
 
 Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional:
 
-| Property Name | Default | Description |
-| ------ | ---- | -------- |
-| domain | | The domain name that is used for AWS SES |
-| auto_reply_from_email | | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application |
-| secret_name | | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal |
+| Property Name | Default | Description | Comment |
+| ------ | ---- | -------- | ---------|
+| domain | | The domain name that is used for AWS SES | This can be left blank if not setting up Amazon SES
+| auto_reply_from_email | | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
+| secret_name | | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | This can be left blank if not setting up the Portal
 
 The following set of configuration variables are optional:
 
@@ -206,7 +207,7 @@ Once you have completed these two sets of steps, navigate to the **_Domain name 
 
 ### Authentication
 
-The portal is protected by Basic Authentication or authentication using OIDC. When using Basic Access Authentication the credentials are stored in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) using the secret provisioned in the ```PortalStack``` CloudFormation stack that was created via AWS CDK.
+The portal is protected by Basic Authentication or authentication using OIDC. When using Basic Access Authentication the credentials are stored in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) using the secret provisioned in the ```PortalStack``` CloudFormation stack that was created via AWS CDK. The CloudFormation stack resource is named ```PiiRedactionPortalAuthSecret```.
 
 ### Environment Variables
 
@@ -220,7 +221,7 @@ You can also create the file using your preferred text editor as well.
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
-| VITE_APIGW | | URL of API Gateway (without the path part of "/portal") generated in the PortalStack CloudFormation stack | Yes
+| VITE_APIGW | | URL of domain or subdomain that was used to create an API Gateway custom domain (described above) | Yes
 | VITE_EMAIL_ENABLED | false | Enables/disables the forward email function. Values are ```true``` to enable the feature or ```false``` to disable it | Yes
 
 Authentication through OpenID Connect (OIDC) requires the following environment variables to be set. Otherwise, they are optional if using Basic Access Authentication.
@@ -260,7 +261,7 @@ Control the OIDC logout flow by assigning values to the following environment va
 | VITE_OIDC_LOGOUT_URL | | OIDC Logout URL (if not available through OIDC Metadata URL) |
 | VITE_OIDC_LOGOUT_RETURN_URL | | OIDC Logout Return URL (if not available through OIDC Metadata URL) |
 
-### Local Development
+<!-- ### Local Development
 
 Run all of the following commands from within a terminal/CLI environment.
 
@@ -291,11 +292,20 @@ The production build of the application can also be viewed locally by running
 npm run preview
 ```
 
-By default, the preview of the production build will run locally on port **4173**. If you need [to customize the port, you can follow these instructions](https://vite.dev/guide/cli#vite-preview).
+By default, the preview of the production build will run locally on port **4173**. If you need [to customize the port, you can follow these instructions](https://vite.dev/guide/cli#vite-preview). -->
 
 ### Production Deployment
 
+**IMPORTANT:** This portal is designed to be run within an environment that has access to the AWS VPC that was set in the ```context.json``` file. Access to this portal from another environment or publicly will be denied.
+
+To bypass the creation of a private API Gateway, set the ```environment``` property in ```context.json``` to ```local``` to create a regional API Gateway.
+
 Run all of the following commands from within a terminal/CLI environment.
+
+Change the value of ```VITE_BASE``` in the ```.env``` file:
+```sh
+VITE_BASE=
+```
 
 Navigate to the root of the ```app``` directory before running any of the following commands to build this application for production by running the following commands:
 
