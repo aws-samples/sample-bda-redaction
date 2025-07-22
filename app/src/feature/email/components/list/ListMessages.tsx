@@ -312,7 +312,7 @@ function ListMessages() {
       />
 
       {
-        selectedItems.length === 1 &&
+        (selectedItems.length === 1 && import.meta.env.VITE_EMAIL_ENABLED === "true") &&
         <ForwardEmail ref={forwardEmailModalRef} email={message.data!} />
       }
     </>

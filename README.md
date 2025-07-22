@@ -10,6 +10,7 @@ This application requires the installation of the following software tools:
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 * [Docker](https://docs.docker.com/engine/install/)
 * [AWS CDK v2.166 or higher](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
+* Terminal/CLI such as macOS Terminal, PowerShell or Windows Terminal, or the Linux command line. [AWS CloudShell](https://aws.amazon.com/cloudshell/) can also be used when all code is located within an AWS account.
 
 VPC with 3 private subnets with no internet access
 
@@ -26,7 +27,7 @@ Key for the user name in the secret should be "smtp_username" and key for passwo
 
 ### Deployment
 
-Run all of the following commands from within a terminal/CLI environment which can include [AWS CloudShell](https://aws.amazon.com/cloudshell/).
+Run all of the following commands from within a terminal/CLI environment.
 
 The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 
@@ -82,7 +83,7 @@ Use cases that require the usage of AWS SES to manage redacted email messages wi
 | Property Name | Default | Description |
 | ------ | ---- | -------- |
 | domain | | The domain name that is used for AWS SES |
-| auto_reply_from_email | | Email address of the "from" field of the email message |
+| auto_reply_from_email | | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application |
 | secret_name | | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal |
 
 The following set of configuration variables are optional:
@@ -156,25 +157,6 @@ To deploy the React-based portal optionally:
 cdk deploy [resource_name_prefix]-PortalStack
 ```
 
-### API Gateway Custom Domain Setup
-
-This is needed for deployment within a non-production or production environment. Within your AWS Console, navigate to API Gateway and click on _Custom domain names_ link in the API Gateway navigation menu on the left-hand side of the screen. [Learn more information about API Gateway custom domain names](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html?icmpid=apigateway_console_help)
-
-1. Enter the name of the domain or subdomain
-2. Select the "Private" option
-3. Choose the proper ACM Certificate
-
-Next, configure the API Mappings:
-
-1. Select your API from the dropdown
-2. Select the stage for the API
-3. DO NOT enter a path
-
-Once you have completed these two sets of steps, navigate to the "Domain name access associations" area of API Gateway.
-
-1. Select the ARN of the newly-created API Gateway Domain Name
-2. Select the VPC Endpoint ID. The VPC Endpoint should reference the endpoint used for API Gateway.
-
 ### Validation
 
 #### Local Deployment
@@ -197,21 +179,49 @@ This application requires the installation of the following software tools:
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 
+### API Gateway Custom Domain Setup
+
+An API Gateway Custom Domain is required for deployment since the API Gateway provisioned by the ```PortalStack``` CloudFormation stack is a private API Gateway. 
+
+Within your AWS Console, navigate to API Gateway and click on **_Custom domain names_** link in the API Gateway navigation menu on the left-hand side of the screen.
+
+To complete this process you will need a custom domain name. [Learn more about creating a private custom domain name](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-private-custom-domains-tutorial.html).
+
+1. Enter the name of the domain or subdomain
+2. Select the **_Private_** option
+3. Select **_API mappings only_** for the routing mode
+3. Choose the proper ACM (AWS Certificate Manager) Certificate
+
+Next, configure the API Mappings:
+
+1. Select your API that was provisioned from the ```PortalStack``` CloudFormation stack from the dropdown
+2. Select the stage for the API
+3. **DO NOT** enter a path
+
+Once you have completed these two sets of steps, navigate to the **_Domain name access associations_** area of API Gateway.
+
+1. Enter the Domain name ARN from the Endpoint configuration of the custom domain you created previously as the value of the **_Domain name ARN_**
+2. Select the VPC Endpoint ID. The VPC Endpoint should reference the endpoint used for API Gateway.
+
+
 ### Authentication
 
-The portal is protected by Basic Authentication or authentication using OIDC. When using Basic Access Authentication the credentials are stored in Secrets Manager using the secret provisioned in the PortalStack that was created via CDK.
+The portal is protected by Basic Authentication or authentication using OIDC. When using Basic Access Authentication the credentials are stored in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) using the secret provisioned in the ```PortalStack``` CloudFormation stack that was created via AWS CDK.
 
 ### Environment Variables
 
-Navigate to the root of the ```app``` directory and update the following variables in the ```.env``` file (by copying the ```.env.example``` file to ```.env```) using the following command to create the ```.env``` file using a terminal/CLI or AWS CloudShell:
+Create a new environment file by navigating to the root of the ```app``` directory and update the following variables in the ```.env``` file (by copying the ```.env.example``` file to ```.env```) using the following command to create the ```.env``` file using a terminal/CLI environment:
 
 ```sh
 cp .env.example .env
 ```
 
+You can also create the file using your preferred text editor as well.
+
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
 | VITE_APIGW | | URL of API Gateway (without the path part of "/portal") generated in the PortalStack CloudFormation stack | Yes
+| VITE_EMAIL_ENABLED | false | Enables/disables the forward email function. Values are ```true``` to enable the feature or ```false``` to disable it | Yes
 
 Authentication through OpenID Connect (OIDC) requires the following environment variables to be set. Otherwise, they are optional if using Basic Access Authentication.
 
@@ -252,7 +262,7 @@ Control the OIDC logout flow by assigning values to the following environment va
 
 ### Local Development
 
-Run all of the following commands from within a terminal/CLI environment which can include [AWS CloudShell](https://aws.amazon.com/cloudshell/).
+Run all of the following commands from within a terminal/CLI environment.
 
 Navigate to the root of the ```app``` directory before running any of the following commands to run the local development server by running the following commands:
 
@@ -285,7 +295,7 @@ By default, the preview of the production build will run locally on port **4173*
 
 ### Production Deployment
 
-Run all of the following commands from within a terminal environment which can include [AWS CloudShell](https://aws.amazon.com/cloudshell/).
+Run all of the following commands from within a terminal/CLI environment.
 
 Navigate to the root of the ```app``` directory before running any of the following commands to build this application for production by running the following commands:
 
@@ -308,7 +318,7 @@ After the build succeeds, transfer all of the files within the _dist/_ directory
 
 Example:
 ```sh
-aws s3 sync dist/ s3://[name-of-bucket] --delete
+aws s3 sync dist/ s3://[resource_name_prefix]-private-web-hosting-assets --delete
 ```
 
 Once the files have been transferred successfully, you can view the portal using either the API Gateway URL or the domain name that is configured to serve requests.

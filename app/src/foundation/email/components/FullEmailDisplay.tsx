@@ -75,7 +75,7 @@ function FullEmailDisplay(props: FullEmailDisplayProps) {
                 <SpaceBetween direction="vertical" size="xs">
                   <Box variant="span"><strong>Date:</strong> <DateTimeDisplay datetime={ props.email?.EmailReceiveTime } /></Box>
                   {
-                    !props.previewMode &&
+                    (!props.previewMode && import.meta.env.VITE_EMAIL_ENABLED === "true") &&
                     <Button variant="inline-link" iconName="arrow-right" onClick={props.onForwardEmail} ariaLabel={`Open forward email modal for ${props.email?.EmailSubject}`}>Forward</Button>
                   }
                 </SpaceBetween>
@@ -86,11 +86,11 @@ function FullEmailDisplay(props: FullEmailDisplayProps) {
             <div style={{whiteSpace: "pre-line"}}>{ props.email?.RedactedBody }</div>
 
             {
-              props.email?.files?.length! > 0 &&
+              (props.email?.files && props.email?.files?.length > 0) &&
               <>
                 <hr style={{marginTop: "1.5rem", marginBottom: "1.5rem", border: "1px solid #999"}} />
 
-                <h4><Box variant="span" fontSize="heading-xl" fontWeight="bold">Attachments ({props.email?.files?.length!})</Box></h4>
+                <h4><Box variant="span" fontSize="heading-xl" fontWeight="bold">Attachments ({ (props.email?.files) ? props.email?.files?.length : 0 })</Box></h4>
                 <TextContent>
                   <ul style={{listStyle: "none", padding: 0}}>
                     {

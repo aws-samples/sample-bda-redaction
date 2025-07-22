@@ -623,7 +623,7 @@ class PortalStack(Stack):
                 throttling_burst_limit=5000
             ),
             default_method_options=apigateway.MethodOptions(
-                authorizer=authorizer if auth_type == 'basic' else None,
+                authorizer=authorizer,
                 method_responses=[
                     apigateway.MethodResponse(
                         status_code='200',
