@@ -8,7 +8,6 @@ This application requires the installation of the following software tools:
 * [Python v3.7 or higher](https://www.python.org/downloads/)
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-* [Docker](https://docs.docker.com/engine/install/)
 * [AWS CDK v2.166 or higher](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 * Terminal/CLI such as macOS Terminal, PowerShell or Windows Terminal, or the Linux command line. [AWS CloudShell](https://aws.amazon.com/cloudshell/) can also be used when all code is located within an AWS account.
 
@@ -30,6 +29,10 @@ Key for the user name in the secret should be "smtp_username" and key for passwo
 
 Run all of the following commands from within a terminal/CLI environment.
 
+Clone the repository
+
+git clone https://github.com/aws-samples/sample-bda-redaction.git
+
 The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ```sh
@@ -40,7 +43,7 @@ cd infra
 
 ```sh
 python3 -m venv .venv
-./.venv/bin/activate
+. .venv/bin/activate
 ```
 
 ```sh
