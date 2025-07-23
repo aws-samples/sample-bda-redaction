@@ -141,10 +141,10 @@ Bootstrap the AWS account to use AWS CDK
 cdk bootstrap
 ```
 
-At this point you can now synthesize the CloudFormation template for this code.
+At this point you can now synthesize the CloudFormation template for this code. Additional environment variables before the cdk synth suppresses the warnings
 
 ```sh
-cdk synth
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
 ```
 
 The generated CloudFormation templates should be run in the account(s) where the resources should be launched.
