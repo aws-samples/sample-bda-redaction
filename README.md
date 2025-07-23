@@ -154,13 +154,13 @@ The generated CloudFormation templates should be run in the account(s) where the
 If you are deploying the through a local environment that is outside of a pipeline, follow the instructions from the **Deployment** section. After those steps have been completed, run:
 
 ```sh
-cdk deploy [resource_name_prefix]-S3Stack [resource_name_prefix]-ConsumerStack
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy [resource_name_prefix]-S3Stack [resource_name_prefix]-ConsumerStack --no-notices
 ```
 
 To deploy the React-based portal optionally:
 
 ```sh
-cdk deploy [resource_name_prefix]-PortalStack
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy [resource_name_prefix]-PortalStack --no-notices
 ```
 
 ### Validation
