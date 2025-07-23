@@ -31,7 +31,9 @@ Run all of the following commands from within a terminal/CLI environment.
 
 Clone the repository
 
+```sh
 git clone https://github.com/aws-samples/sample-bda-redaction.git
+```
 
 The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 
