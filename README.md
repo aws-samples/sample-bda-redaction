@@ -38,7 +38,7 @@ git clone https://github.com/aws-samples/sample-bda-redaction.git
 The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ```sh
-cd infra
+cd sample-bda-redaction/infra/
 ```
 
 **Optional:** Create and activate a new Python virutal environment
