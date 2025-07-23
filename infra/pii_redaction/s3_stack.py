@@ -10,6 +10,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_ec2 as ec2,
 )
+import aws_cdk as cdk
 from cdk_nag import NagSuppressions
 from pii_redaction.helpers.index import stackPrefix
 
@@ -61,8 +62,8 @@ class S3Stack(Stack):
         s3_prefix_list_id = response_s3_prefix['PrefixLists'][0]['PrefixListId']
         
         # Create a security group
-        security_group = ec2.SecurityGroup(self, "LambdaSecurityGroup",
-            security_group_name=stackPrefix(resource_prefix, "LambdaSecurityGroup"),
+        security_group = ec2.SecurityGroup(self, stackPrefix(resource_prefix,"LambdaSecurityGroup"),
+            #security_group_name=stackPrefix(resource_prefix, "LambdaSecurityGroup"),
             vpc=vpc,
             description="Security group for Lambda function",
             allow_all_outbound=False
@@ -93,8 +94,8 @@ class S3Stack(Stack):
         # S3 bucket for access logs
         s3_access_logs_bucket = s3.Bucket(
             self,
-            "s3AccessLogsBucket",
-            bucket_name=stackPrefix(resource_prefix, "s3-access-logs-bucket"),
+            stackPrefix(resource_prefix,"s3AccessLogsBucket"),
+            #bucket_name=stackPrefix(resource_prefix, "s3-access-logs-bucket"),
             removal_policy=RemovalPolicy.RETAIN,
             enforce_ssl=True,
             auto_delete_objects=False,
@@ -106,8 +107,8 @@ class S3Stack(Stack):
 
         raw_bucket = s3.Bucket(
             self,
-            raw_bucket_name,
-            bucket_name=stackPrefix(resource_prefix, raw_bucket_name),
+            stackPrefix(resource_prefix,raw_bucket_name),
+            #bucket_name=stackPrefix(resource_prefix, raw_bucket_name),
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 s3.LifecycleRule(
@@ -123,8 +124,8 @@ class S3Stack(Stack):
         # Create S3 bucket to save redacted email data
         redacted_bucket = s3.Bucket(
             self,
-            redacted_bucket_name,
-            bucket_name=stackPrefix(resource_prefix, redacted_bucket_name),
+            stackPrefix(resource_prefix,redacted_bucket_name),
+            #bucket_name=stackPrefix(resource_prefix, redacted_bucket_name),
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 s3.LifecycleRule(
@@ -140,8 +141,8 @@ class S3Stack(Stack):
         # Create a DynamoDB table with Time to Live (TTL) enabled
         email_dynamodb_table = dynamodb.Table(
             self, 
-            table_name,
-            table_name=stackPrefix(resource_prefix, table_name),
+            stackPrefix(resource_prefix,table_name),
+            #table_name=stackPrefix(resource_prefix, table_name),
             partition_key=dynamodb.Attribute(
                 name="CaseID",
                 type=dynamodb.AttributeType.NUMBER
@@ -175,8 +176,8 @@ class S3Stack(Stack):
         # Create an IAM role for the Lambda function
         lambda_role = iam.Role(
             self, 
-            "piiRedactionBackendLambdaRole",
-            role_name=stackPrefix(resource_prefix, "piiRedactionBackendLambdaRole"),
+            stackPrefix(resource_prefix,"piiRedactionBackendLambdaRole"),
+            #role_name=stackPrefix(resource_prefix, "piiRedactionBackendLambdaRole"),
             assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole")
@@ -231,7 +232,7 @@ class S3Stack(Stack):
         # Create an IAM role for the SES
         ses_role = iam.Role(
             self, 
-            "piiRedactionSESServiceRole",
+            stackPrefix(resource_prefix,"piiRedactionSESServiceRole"),
             role_name=stackPrefix(resource_prefix, "piiRedactionSESServiceRole"),
             assumed_by=iam.ServicePrincipal("ses.amazonaws.com")
         )
@@ -359,23 +360,29 @@ class S3Stack(Stack):
             ec2.Subnet.from_subnet_id(self, f"SupportedSubnet{i}", subnet_id)
             for i, subnet_id in enumerate(supported_subnet_ids_list_bda)
         ]
+        for subnet in supported_subnet_ids:
+            cdk.Annotations.of(subnet).acknowledge_warning("@aws-cdk/aws-ec2:noSubnetRouteTableId", "This is an expected behavior for my network setup.")
         # Convert the comma-separated string to a list of ISubnet objects
         supported_subnet_ids_bda_runtime = [
             ec2.Subnet.from_subnet_id(self, f"BDASupportedSubnet{i}", subnet_id)
             for i, subnet_id in enumerate(supported_subnet_ids_list_bda_runtime)
         ]
+        for subnet in supported_subnet_ids_bda_runtime:
+            cdk.Annotations.of(subnet).acknowledge_warning("@aws-cdk/aws-ec2:noSubnetRouteTableId", "This is an expected behavior for my network setup.")
         # Convert the comma-separated string to a list of ISubnet objects
         smtp_supported_subnet_ids = [
             ec2.Subnet.from_subnet_id(self, f"SmtpSupportedSubnet{i}", subnet_id)
             for i, subnet_id in enumerate(smtp_supported_subnet_ids_list)
         ]
+        for subnet in smtp_supported_subnet_ids:
+            cdk.Annotations.of(subnet).acknowledge_warning("@aws-cdk/aws-ec2:noSubnetRouteTableId", "This is an expected behavior for my network setup.")
         supported_route_table_ids = set([rt['RouteTableId'] for rt in route_table_response['RouteTables']])
         supported_route_tables=[]
         for id in supported_route_table_ids:
             supported_route_tables.append(id)
         s3_endpoint = ec2.CfnVPCEndpoint(
             self, 
-            "piiRedactionS3GatewayEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionS3GatewayEndpoint"),
             vpc_id=vpc.vpc_id,
             service_name=f"com.amazonaws.{self.region}.s3",
             vpc_endpoint_type="Gateway",
@@ -383,7 +390,7 @@ class S3Stack(Stack):
         )
         dynamodb_endpoint = ec2.CfnVPCEndpoint(
             self, 
-            "piiRedactionDynamoDBGatewayEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionDynamoDBGatewayEndpoint"),
             vpc_id=vpc.vpc_id,
             service_name=f"com.amazonaws.{self.region}.dynamodb",
             vpc_endpoint_type="Gateway",
@@ -392,7 +399,7 @@ class S3Stack(Stack):
 
         lambda_endpoint = ec2.InterfaceVpcEndpoint(
             self, 
-            "piiRedactionLambdaInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionLambdaInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointService(f"com.amazonaws.{self.region}.lambda"),
             subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
@@ -410,7 +417,7 @@ class S3Stack(Stack):
         )
 
         ecr_endpoint = ec2.InterfaceVpcEndpoint(self,
-            "piiRedactionECRInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionECRInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointAwsService.ECR,
             subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
@@ -428,7 +435,7 @@ class S3Stack(Stack):
         )
 
         bda_endpoint = ec2.InterfaceVpcEndpoint(self,
-            "piiRedactionBDAInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionBDAInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointService(f"com.amazonaws.{self.region}.bedrock-data-automation"),
             subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
@@ -446,7 +453,7 @@ class S3Stack(Stack):
         )
 
         bedrock_runtime_endpoint = ec2.InterfaceVpcEndpoint(self,
-            "piiRedactionBedrockRuntimeInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionBedrockRuntimeInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointService(f"com.amazonaws.{self.region}.bedrock-runtime"),
             subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
@@ -463,7 +470,7 @@ class S3Stack(Stack):
         )
 
         bda_runtime_endpoint = ec2.InterfaceVpcEndpoint(self,
-            "piiRedactionBDARuntimeInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionBDARuntimeInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointService(f"com.amazonaws.{self.region}.bedrock-data-automation-runtime"),
             subnets=ec2.SubnetSelection(subnets=supported_subnet_ids_bda_runtime),
@@ -480,7 +487,7 @@ class S3Stack(Stack):
         )
 
         secrets_manager_endpoint = ec2.InterfaceVpcEndpoint(self,
-            "piiRedactionSecretsManagerInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionSecretsManagerInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
             subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
@@ -498,7 +505,7 @@ class S3Stack(Stack):
         )
         
         sns_endpoint = ec2.InterfaceVpcEndpoint(self,
-            "piiRedactionSNSInterfaceEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionSNSInterfaceEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointAwsService.SNS,
             subnets=ec2.SubnetSelection(subnets=supported_subnet_ids),
@@ -518,7 +525,7 @@ class S3Stack(Stack):
         # Create SES SMTP Endpoint
         ses_smtp_endpoint = ec2.InterfaceVpcEndpoint(
             self, 
-            "piiRedactionSESSmtpEndpoint",
+            stackPrefix(resource_prefix,"piiRedactionSESSmtpEndpoint"),
             vpc=vpc,
             service=ec2.InterfaceVpcEndpointService(f"com.amazonaws.{self.region}.email-smtp", 587),  # Adjust region as needed
             private_dns_enabled=True,

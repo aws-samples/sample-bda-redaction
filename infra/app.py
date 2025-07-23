@@ -23,7 +23,7 @@ if context_values:
     inventory_table_name = context_values['resource_names'].get('inventory_table_name', 'EmailInventoryTable')
     vpc_id = context_values['resource_names'].get('vpc_id', 'MyVPC')
     secret_name = context_values['resource_names'].get('secret_name', 'MySecret')
-    #auto_reply_email = context_values['resource_names'].get('auto_reply_email', 'MyAutoReplyEmail')
+    auto_reply_email = context_values['resource_names'].get('auto_reply_email', 'MyAutoReplyEmail')
     auto_reply_from_email = context_values['resource_names'].get('auto_reply_from_email', 'MyAutoReplyFromEmail')
     retention = context_values['resource_names'].get('retention', 'MyRetention')
     resource_name_prefix = context_values['resource_names'].get('resource_name_prefix', 'ResourceNamePrefix')
