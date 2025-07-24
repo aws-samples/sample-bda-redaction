@@ -1,5 +1,26 @@
 # Multimodal PII Redaction Using Amazon Bedrock
 
+## Solution Architecture 
+The following diagram outlines the solution architecture. 
+
+<img width="4271" height="2200" alt="PII Detection   Redaction Amazon Bedrock" src="https://github.com/user-attachments/assets/a57f9fa2-f02b-44cd-92dc-39e1f8c09e8b" />
+
+The diagram illustrates the backend PII detection and redaction workflow and the frontend application user interface orchestrated by [AWS Lambda](https://aws.amazon.com/lambda/) and [Amazon EventBridge](https://aws.amazon.com/eventbridge/). The process follows these steps:
+1.	The workflow starts with the user sending an email to the incoming email server hosted on [Amazon Simple Email Service](https://aws.amazon.com/ses/) (Amazon SES). 
+2.	Amazon SES then stores the emails and attachments in an [Amazon Simple Storage Service](https://aws.amazon.com/s3/) (S3) landing bucket. 
+3.	An S3 event notification triggers the initial processing AWS Lambda function that generates a unique case ID and creates a tracking record in [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
+4.	Lambda orchestrates the PII detection and redaction workflow by extracting email body and attachments from the email and saving in raw email bucket followed by invoking [Amazon Bedrock Data Automation](https://aws.amazon.com/bedrock/bda/) and [Amazon Bedrock Guardrails](https://aws.amazon.com/bedrock/guardrails/) for detecting and redacting PII. 
+5.	Amazon Bedrock Data Automation processes attachments to extract text from the files.
+6.	Amazon Bedrock Guardrails detects and redacts the PII from both email body and text from attachments, and then stores the redacted content in another S3 bucket.
+7.	DynamoDB tables are updated with email messages, folders metadata, and email filtering rules. 
+8.	An Amazon EventBridge Scheduler is used to run the Rules Engine Lambda on a schedule which will process new emails that have yet to be categorized into folders based on enabled email filtering rules criteria. 
+9.	The Rules Engine Lambda also communicates with DynamoDB to access the messages table and the rules table.
+10.	Users access the application user interface with OpenID Connect or Basic Authentication through [AWS Web Application Firewall](https://aws.amazon.com/waf/). 
+11.	[Amazon API Gateway](https://aws.amazon.com/api-gateway/) manages user API requests.
+12.	A Portal API Lambda fetches the case details based on user requests.
+13.	The static assets served by API Gateway are stored in a private S3 bucket.
+14.	[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) provide visibility into the PII detection and redaction process, while [Amazon Simple Notification Service](https://aws.amazon.com/sns/) delivers real-time alerts for any failures, ensuring immediate attention to issues.
+
 ## Infrastructure
 
 ### Install Prerequisites
