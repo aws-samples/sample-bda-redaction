@@ -39,8 +39,10 @@ An existing VPC that contains 3 private subnets with no internet access is neede
 
 When deploying this solution, there will be 2-3 CloudFormation stacks that will be deployed in your AWS account:
 * **S3Stack** - Provisions the core infrastructure including S3 buckets for raw and redacted email storage with automatic lifecycle policies, a DynamoDB table for email metadata tracking with TTL and global secondary indexes, and VPC security groups for secure Lambda function access. It also creates IAM roles with comprehensive permissions for S3, DynamoDB, Bedrock, Comprehend, and Textract services, forming the secure foundation for the entire PII detection and redaction workflow.
+
 * **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured, Lambda layers for dependency management, and S3 event notifications to trigger the email processing workflow automatically.
-* PortalStack
+
+* **PortalStack (optional)** - Provisions the optional web interface including a private API Gateway with Lambda authorizers for Basic Auth or OIDC authentication, DynamoDB tables for folders and rules management, and S3 buckets for static web assets with WAF protection. It also creates EventBridge schedulers for automated rules processing, CloudTrail logging for DynamoDB data plane operations, and Lambda functions for portal API handling and email forwarding functionality when configured.
 
 ### Amazon SES (optional)
 
