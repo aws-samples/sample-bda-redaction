@@ -103,14 +103,14 @@ Update the ```context.json``` file with the correct configuration options for th
 | resource_name_prefix |N/A| Prefix used when naming resources during the stack creation | During stack creation |
 | retention | ```90``` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
 
-The following properties are only required when the portal is being provisioned:
+The following properties are only required when the portal is being provisioned.
 
 | Property Name | Default | Description | 
 | ------ | ---- | -------- | 
 | environment | ```development``` | The type of environment where resources will be provisioned. Values are ```local```, ```development```, ```production```. Setting this property to ```local``` will make create a regional API Gateway. Otherwise, it will be a private API Gateway | 
 | auth_type | ```basic``` | The type of authentication used. Values are either ```basic``` or ```oidc```  | 
 
-The following set of configuration variables are only required if ```auth_type``` is set to ```oidc``` and the portal is being provisioned:
+The following set of configuration variables are only required if ```auth_type``` is set to ```oidc``` and the portal is being provisioned.
 
 | Property Name | Default | Description |
 | ------ | ---- | -------- |
@@ -119,22 +119,22 @@ The following set of configuration variables are only required if ```auth_type``
 | oidc_issuer |N/A| The URI of the OIDC OP |
 | authorized_users | ```[]``` | List of users identifiers that are authorized to use this application |
 
-Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional:
+Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional.
 
-| Property Name | Default | Description | Comment |
-| ------ | ---- | -------- | ---------|
-| domain | | The domain name that is used for AWS SES | This can be left blank if not setting up Amazon SES
-| auto_reply_from_email | | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
-| secret_name | | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | This can be left blank if not setting up the Portal
+| Property Name | Description | Comment |
+| ------ | -------- | ---------|
+| domain | The domain name that is used for AWS SES | This can be left blank if not setting up Amazon SES
+| auto_reply_from_email | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
+| secret_name | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | This can be left blank if not setting up the Portal
 
 The following set of configuration variables are optional:
 
-| Property Name | Default | Description | Required |
-| ------ | ---- | -------- | ------- |
-| api_gateway_vpc_endpoint_id |  | VPC Endpoint ID for API Gateway. Created if no value is provided. | No |
-| kms_cmk_arn |  | ARN of customer-managed KMS key. Created if no value is provided. | No |
-| api_domain_name |  | API Gateway custom domain name (must be registered as a CNAME within a Route 53 Hosted Zone that references the domain_name_alias_domain_name). | No |
-| api_domain_cert_arn |  | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name). | Yes, if ```api_domain_name``` is set |
+| Property Name | Description | Required |
+| ------ | -------- | ------- |
+| api_gateway_vpc_endpoint_id | VPC Endpoint ID for API Gateway. Created if no value is provided. | No |
+| kms_cmk_arn | ARN of customer-managed KMS key. Created if no value is provided. | No |
+| api_domain_name | API Gateway custom domain name (must be registered as a CNAME within a Route 53 Hosted Zone that references the domain_name_alias_domain_name). | No |
+| api_domain_cert_arn | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name). | Yes, if ```api_domain_name``` is set |
 
 #### Update Lambda Layer that contains additional PyPI packages
 
