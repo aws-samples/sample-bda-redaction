@@ -96,11 +96,11 @@ Update the ```context.json``` file with the correct configuration options for th
 
 | Property Name | Default | Description | When to Create |
 | ------ | ---- | -------- | ---- |
-| vpc_id |N/A| VPC ID where resources will be deployed | VPC needs to be created prior to execution |
-| raw_bucket |N/A| S3 bucket storing raw messages and attachments | Created during CDK deployment |
-| redacted_bucket_name |N/A| S3 bucket storing redacted messages and attachments | Created during CDK deployment |
-| inventory_table_name |N/A| DynamoDB table name storing redacted message details | Created during CDK deployment |
-| resource_name_prefix |N/A| Prefix used when naming resources during the stack creation | During stack creation |
+| vpc_id |None| VPC ID where resources will be deployed | VPC needs to be created prior to execution |
+| raw_bucket |None| S3 bucket storing raw messages and attachments | Created during CDK deployment |
+| redacted_bucket_name |None| S3 bucket storing redacted messages and attachments | Created during CDK deployment |
+| inventory_table_name |None| DynamoDB table name storing redacted message details | Created during CDK deployment |
+| resource_name_prefix |None| Prefix used when naming resources during the stack creation | During stack creation |
 | retention | ```90``` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
 
 The following properties are only required when the portal is being provisioned.
@@ -114,9 +114,9 @@ The following set of configuration variables are only required if ```auth_type``
 
 | Property Name | Default | Description |
 | ------ | ---- | -------- |
-| oidc_audience |N/A| The unique identifier of the API |
-| oidc_jwks_uri |N/A| The OIDC JWKS URI |
-| oidc_issuer |N/A| The URI of the OIDC OP |
+| oidc_audience |None| The unique identifier of the API |
+| oidc_jwks_uri |None| The OIDC JWKS URI |
+| oidc_issuer |None| The URI of the OIDC OP |
 | authorized_users | ```[]``` | List of users identifiers that are authorized to use this application |
 
 Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional.
@@ -246,23 +246,23 @@ You can also create the file using your preferred text editor as well.
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
-| VITE_APIGW |N/A| URL of domain or subdomain that was used to create an API Gateway custom domain (described above) | Yes
+| VITE_APIGW |None| URL of domain or subdomain that was used to create an API Gateway custom domain (described above) | Yes
 | VITE_EMAIL_ENABLED | false | Enables/disables the forward email function. Values are ```true``` to enable the feature or ```false``` to disable it | Yes
 
 Authentication through OpenID Connect (OIDC) requires the following environment variables to be set. Otherwise, they are optional if using Basic Access Authentication.
 
 | Environment Variable Name | Default | Description |
 | ------ | ---- | -------- |
-| VITE_OIDC_DOMAIN | N/A | FQDN for the OIDC OP |
-| VITE_OIDC_CLIENT_ID | N/A | Unique identifier for the OIDC RP |
-| VITE_OIDC_AUDIENCE | N/A | The unique identifier (FQDN) of the API |
+| VITE_OIDC_DOMAIN | None | FQDN for the OIDC OP |
+| VITE_OIDC_CLIENT_ID | None | Unique identifier for the OIDC RP |
+| VITE_OIDC_AUDIENCE | None | The unique identifier (FQDN) of the API |
 | VITE_OIDC_SCOPES | ```openid email profile user_alias username``` | The OIDC scopes that provide access to standard claims |
 
 Include the ```VITE_OIDC_METADATA_URL``` environment variable if all necessary OIDC configuration values are provided through it:
 
 | Environment Variable Name | Default | Description |
 | ------ | ---- | -------- |
-| VITE_OIDC_METADATA_URL | N/A | OIDC Metadata URL |
+| VITE_OIDC_METADATA_URL | None | OIDC Metadata URL |
 
 Otherwise, do not provide a value for ```VITE_OIDC_METADATA_URL``` and provide these additional environment variables to help configure access to your OIDC provider:
 
@@ -283,8 +283,8 @@ Control the OIDC logout flow by assigning values to the following environment va
 
 | Environment Variable | OIDC Parameter | Description | Default |
 |---------------------|----------------|-------------|---------|
-| VITE_OIDC_LOGOUT_URL | | OIDC Logout URL (if not available through OIDC Metadata URL) |
-| VITE_OIDC_LOGOUT_RETURN_URL | | OIDC Logout Return URL (if not available through OIDC Metadata URL) |
+| VITE_OIDC_LOGOUT_URL | | OIDC Logout URL (if not available through OIDC Metadata URL) | None |
+| VITE_OIDC_LOGOUT_RETURN_URL | | OIDC Logout Return URL (if not available through OIDC Metadata URL) | None |
 
 <!-- ### Local Development
 
