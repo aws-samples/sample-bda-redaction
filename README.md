@@ -94,14 +94,14 @@ cp context.json.example context.json
 
 Update the ```context.json``` file with the correct configuration options for the environment.
 
-| Property Name | Default | Description | Created |
+| Property Name | Default | Description | When to Create |
 | ------ | ---- | -------- | ---- |
-| vpc_id | | VPC ID where resources will be deployed | VPC needs to be created prior to execution |
-| raw_bucket | | S3 bucket storing raw messages and attachments | Created during CDK deployment |
-| redacted_bucket_name | | S3 bucket storing redacted messages and attachments | Created during CDK deployment |
-| inventory_table_name | | DynamoDB table name storing redacted message details | Created during CDK deployment |
-| resource_name_prefix | | Prefix used when naming resources during the stack creation |
-| retention | ```90``` | Number of days for retention of the messages in the redacted and raw S3 buckets |
+| vpc_id |N/A| VPC ID where resources will be deployed | VPC needs to be created prior to execution |
+| raw_bucket |N/A| S3 bucket storing raw messages and attachments | Created during CDK deployment |
+| redacted_bucket_name |N/A| S3 bucket storing redacted messages and attachments | Created during CDK deployment |
+| inventory_table_name |N/A| DynamoDB table name storing redacted message details | Created during CDK deployment |
+| resource_name_prefix |N/A| Prefix used when naming resources during the stack creation | During stack creation |
+| retention | ```90``` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
 
 The following properties are only required when the portal is being provisioned:
 
