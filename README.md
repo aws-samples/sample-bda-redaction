@@ -33,7 +33,7 @@ This application requires the installation of the following software tools:
 * Terminal/CLI such as macOS Terminal, PowerShell or Windows Terminal, or the Linux command line. [AWS CloudShell](https://aws.amazon.com/cloudshell/) can also be used when all code is located within an AWS account.
 
 ### Infrastructure Prerequites
-An existing VPC that contains 3 private subnets with no internet access is needed.
+An existing [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/create-vpc.html) that contains 3 private subnets with no internet access is needed.
 
 ### CloudFormation Stacks
 
