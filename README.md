@@ -262,7 +262,7 @@ Include the ```VITE_OIDC_METADATA_URL``` environment variable if all necessary O
 
 | Environment Variable Name | Default | Description |
 | ------ | ---- | -------- |
-| VITE_OIDC_METADATA_URL | | OIDC Metadata URL |
+| VITE_OIDC_METADATA_URL | N/A | OIDC Metadata URL |
 
 Otherwise, do not provide a value for ```VITE_OIDC_METADATA_URL``` and provide these additional environment variables to help configure access to your OIDC provider:
 
