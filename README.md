@@ -253,9 +253,9 @@ Authentication through OpenID Connect (OIDC) requires the following environment 
 
 | Environment Variable Name | Default | Description |
 | ------ | ---- | -------- |
-| VITE_OIDC_DOMAIN |  | FQDN for the OIDC OP |
-| VITE_OIDC_CLIENT_ID |  | Unique identifier for the OIDC RP |
-| VITE_OIDC_AUDIENCE |  | The unique identifier (FQDN) of the API |
+| VITE_OIDC_DOMAIN | N/A | FQDN for the OIDC OP |
+| VITE_OIDC_CLIENT_ID | N/A | Unique identifier for the OIDC RP |
+| VITE_OIDC_AUDIENCE | N/A | The unique identifier (FQDN) of the API |
 | VITE_OIDC_SCOPES | ```openid email profile user_alias username``` | The OIDC scopes that provide access to standard claims |
 
 Include the ```VITE_OIDC_METADATA_URL``` environment variable if all necessary OIDC configuration values are provided through it:
