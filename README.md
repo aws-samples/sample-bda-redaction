@@ -107,8 +107,8 @@ The following properties are only required when the portal is being provisioned:
 
 | Property Name | Default | Description | Comments |
 | ------ | ---- | -------- | ----- |
-| environment | ```development``` | The type of environment where resources will be provisioned. Values are ```local```, ```development```, ```production``` | Setting this property to ```local``` will make create a regional API Gateway. Otherwise, it will be a Private API Gateway |
-| auth_type | ```basic``` | The type of authentication used. Values are either ```oidc``` or ```basic``` | |
+| environment | ```development``` | The type of environment where resources will be provisioned. Values are ```local```, ```development```, ```production``` | Setting this property to ```local``` will make create a regional API Gateway. Otherwise, it will be a private API Gateway |
+| auth_type | ```basic``` | The type of authentication used. Values are either ```basic``` or ```oidc```  | |
 
 The following set of configuration variables are only required if ```auth_type``` is set to ```oidc``` and the portal is being provisioned:
 
