@@ -246,7 +246,7 @@ You can also create the file using your preferred text editor as well.
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
-| VITE_APIGW | | URL of domain or subdomain that was used to create an API Gateway custom domain (described above) | Yes
+| VITE_APIGW |N/A| URL of domain or subdomain that was used to create an API Gateway custom domain (described above) | Yes
 | VITE_EMAIL_ENABLED | false | Enables/disables the forward email function. Values are ```true``` to enable the feature or ```false``` to disable it | Yes
 
 Authentication through OpenID Connect (OIDC) requires the following environment variables to be set. Otherwise, they are optional if using Basic Access Authentication.
