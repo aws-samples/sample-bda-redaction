@@ -216,7 +216,7 @@ To complete this process you will need a custom domain name. [Learn more about c
 1. Enter the name of the domain or subdomain
 2. Select the **_Private_** option
 3. Select **_API mappings only_** for the routing mode
-3. Choose the proper ACM (AWS Certificate Manager) Certificate
+3. Choose the proper [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) (ACM) Certificate
 
 Next, configure the API Mappings:
 
@@ -224,7 +224,7 @@ Next, configure the API Mappings:
 2. Select the stage for the API
 3. **DO NOT** enter a path
 
-Once you have completed these two sets of steps, navigate to the **_Domain name access associations_** area of API Gateway.
+Once you complete custom domain name and API mappings, navigate to the **_Domain name access associations_** area of API Gateway.
 
 1. Enter the Domain name ARN from the Endpoint configuration of the custom domain you created previously as the value of the **_Domain name ARN_**
 2. Select the VPC Endpoint ID. The VPC Endpoint should reference the endpoint used for API Gateway.
