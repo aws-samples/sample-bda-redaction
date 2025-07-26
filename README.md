@@ -114,9 +114,9 @@ The following set of configuration variables are only required if ```auth_type``
 
 | Property Name | Default | Description |
 | ------ | ---- | -------- |
-| oidc_audience | | The unique identifier of the API |
-| oidc_jwks_uri | | The OIDC JWKS URI |
-| oidc_issuer | | The URI of the OIDC OP |
+| oidc_audience |N/A| The unique identifier of the API |
+| oidc_jwks_uri |N/A| The OIDC JWKS URI |
+| oidc_issuer |N/A| The URI of the OIDC OP |
 | authorized_users | ```[]``` | List of users identifiers that are authorized to use this application |
 
 Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional:
