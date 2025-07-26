@@ -189,7 +189,7 @@ JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deplo
 ### Validation
 
 #### Deployment
-Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through ```stderr``` in the Terminal/CLI enviroment.
+Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through ```stderr``` in the Terminal/CLI environment.
 
 #### Rollback Procedures
 Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
