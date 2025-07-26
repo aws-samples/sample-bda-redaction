@@ -50,13 +50,13 @@ When deploying this solution, there will be 2-3 CloudFormation stacks that will 
 
 Below Amazon SES Setup is optional. One can test the code without this setup as well. The code, however, expects an email file to test the solution. To test the solution without setting up Amazon SES we should upload email file to be redacted to the raw S3 bucket created as part of CDK deployment under the folder ```domain_emails``` inside the S3 bucket.
 
-Setup Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
+Set up Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
 
 * [Request SES Production Access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 * [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html)
 
-Create credentials for SMTP and save it in secrets manager secret with name "SmtpCredentials". If using any other name for secret update the context.json line "secret_name" with the name of the secret created.
-Key for the user name in the secret should be "smtp_username" and key for password should be "smtp_password" when storing the same in secrets manager
+Create credentials for SMTP and save it in secrets manager secret with name ```SmtpCredentials```. If using any other name for secret update the ```context.json``` line ```secret_name``` with the name of the secret created.
+Key for the user name in the secret should be ```smtp_username``` and key for password should be ```smtp_password``` when storing the same in secrets manager
 
 * [Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
 
