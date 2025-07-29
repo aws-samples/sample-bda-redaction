@@ -37,7 +37,7 @@ An existing [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/create-vpc.ht
 
 ### CloudFormation Stacks
 
-When deploying this solution, there will be 2-3 CloudFormation stacks that will be deployed in your AWS account:
+The solution contains 3 stacks (2 required, 1 optional) that will be deployed in your AWS account:
 * **S3Stack** - Provisions the core infrastructure including S3 buckets for raw and redacted email storage with automatic lifecycle policies, a DynamoDB table for email metadata tracking with time-to-live (TTL) and global secondary indexes, and VPC security groups for secure Lambda function access. It also creates IAM roles with comprehensive permissions for S3, DynamoDB, and Bedrock services, forming the secure foundation for the entire PII detection and redaction workflow.
 
 * **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured, Lambda layers for dependency management, and S3 event notifications to trigger the email processing workflow automatically.
@@ -170,29 +170,39 @@ Bootstrap the AWS account to use AWS CDK
 cdk bootstrap
 ```
 
-At this point you can now synthesize the CloudFormation template for this code. Additional environment variables before the cdk synth suppresses the warnings
+At this point you can now synthesize the CloudFormation template for this code. Additional environment variables before the cdk synth suppresses the warnings. The deployment process should take approximately 10 min for a first-time deployment to complete.
+
+```sh
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
+```
+
+Replace ```<<resource_name_prefix>>``` with its chosen value and then run:
+```sh
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
+```
+
+### Validation
+
+#### Deployment
+Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through ```stderr``` in the Terminal/CLI environment. 
+* [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
+
+Once deployment issues have been resolved, redeploy the stack using the following commands:
 
 ```sh
 JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
 ```
 
 ```sh
+# Replace <<resource_name_prefix>> with its chosen value:
+
 JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
 ```
 
-To deploy the React-based portal optionally:
-
-```sh
-JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-PortalStack --no-notices
-```
-
-### Validation
-
-#### Deployment
-Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through ```stderr``` in the Terminal/CLI environment.
-
 #### Rollback Procedures
 Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
+
+In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
 
 ## Portal
 
@@ -205,6 +215,26 @@ This application requires the installation of the following software tools:
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 
+### Infrastructure Deployment
+
+Synthesize the CloudFormation template for this code by navigating to the directory root of the solution. Then run the following commands:
+
+```sh
+cd infra
+```
+
+```sh
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
+```
+
+Deploy the React-based portal. Replace ```<<resource_name_prefix>>``` with its chosen value:
+
+```sh
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-PortalStack --no-notices
+```
+
+The first-time deployment should take approximately 10 minutes to complete.
+
 ### API Gateway Custom Domain Setup
 
 An API Gateway Custom Domain is required for deployment since the API Gateway provisioned by the ```PortalStack``` CloudFormation stack is a private API Gateway. 
@@ -213,21 +243,26 @@ Within your AWS Console, navigate to API Gateway and click on **_Custom domain n
 
 To complete this process you will need a custom domain name. [Learn more about creating a private custom domain name](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-private-custom-domains-tutorial.html).
 
-1. Enter the name of the domain or subdomain
-2. Select the **_Private_** option
-3. Select **_API mappings only_** for the routing mode
-3. Choose the proper [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) (ACM) Certificate
+1. Click on **_Add domain name_**.
+2. Enter the name of the domain or subdomain.
+3. Select the **_Private_** option.
+4. Select **_API mappings only_** for the routing mode.
+5. Choose the proper [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) (ACM) Certificate. If an ACM certificate is not available for selection, [learn how to set up AWS Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/setup.html) and then request a [public certificate](https://docs.aws.amazon.com/acm/latest/userguide/acm-public-certificates.html).
+6. Click **_Add domain name_** to save the custom domain name configuration.
 
 Next, configure the API Mappings:
 
-1. Select your API that was provisioned from the ```PortalStack``` CloudFormation stack from the dropdown
-2. Select the stage for the API
-3. **DO NOT** enter a path
+1. Select your API that was provisioned from the ```PortalStack``` CloudFormation stack from the dropdown.
+2. Select the stage for the API.
+3. **DO NOT** enter a value for the path input field.
+4. Click **_Save_** to save the API Mappings.
 
 Once you complete custom domain name and API mappings, navigate to the **_Domain name access associations_** area of API Gateway.
 
-1. Enter the Domain name ARN from the Endpoint configuration of the custom domain you created previously as the value of the **_Domain name ARN_**
-2. Select the VPC Endpoint ID. The VPC Endpoint should reference the endpoint used for API Gateway.
+1. Select the Domain name ARN from the Endpoint configuration of the custom domain you created previously as the value of the **_Domain name ARN_**.
+2. Click **_Create domain association_**.
+3. Select the VPC Endpoint ID. The VPC Endpoint should reference the endpoint used for API Gateway.
+4. Click **_Create domain association_**.
 
 
 ### Authentication
