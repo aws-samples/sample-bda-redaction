@@ -206,7 +206,7 @@ In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com
 
 #### Testing the application without Amazon SES
 
-As described earlier the solution is used to redact any PII data in email body and attachements so to test the application we need to provide an email file which needs to be redacted. We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. This will trigger the workflow of redacting the email body and attachment by S3 event notification triggering the Lambda. For conviniece a sample email is available in "infra/pii_redaction/sample_email" directory of the repository. Below are the steps to test application without Amazon SES using the samle email file.
+As described earlier the solution is used to redact any PII data in email body and attachements so to test the application we need to provide an email file which needs to be redacted. We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. This will trigger the workflow of redacting the email body and attachment by S3 event notification triggering the Lambda. For conviniece a sample email is available in **"infra/pii_redaction/sample_email"** directory of the repository. Below are the steps to test application without Amazon SES using the samle email file.
 
 ```sh
 # Replace <<raw_bucket>> with raw bucket name created during deployment:
