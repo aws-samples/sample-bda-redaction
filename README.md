@@ -214,8 +214,11 @@ As described earlier the solution is used to redact any PII data in email body a
 aws s3 cp infra/pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domains_emails/
 ```
 
-Above will trigger the redaction of email process. You can track the progress in the dynamodb table <<inventory_table_name>>. A unique case_id is generated for each email being processed. Once completed you can find the redacted email body in <<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/ and redacted attachments in <<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/
+Above will trigger the redaction of email process. You can track the progress in the dynamodb table **<<inventory_table_name>>**. A unique case_id is generated for each email being processed. Once completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
 
+#### Testing the application with Amazon SES
+
+To test an application using Amazon SES we just need to send email to verified email in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. A unique case_id is generated for each email being processed. Once completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
 
 
 ## Portal
