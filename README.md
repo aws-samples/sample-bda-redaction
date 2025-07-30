@@ -48,7 +48,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 
 **Move directly to the Deployment section below if you are not using Amazon SES**
 
-Below Amazon SES Setup is optional. One can test the code without this setup as well. The code, however, expects an email file to test the solution. To test the solution without setting up Amazon SES we should upload email file to be redacted to the raw S3 bucket created as part of CDK deployment under the folder ```domain_emails``` inside the S3 bucket.
+Below Amazon SES Setup is optional. One can test the code without this setup as well. Steps to test the application with or without Amazon SES is covered in **Testing** section.
 
 Set up Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
 
@@ -203,6 +203,20 @@ JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deplo
 Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
 
 In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
+
+#### Testing the application without Amazon SES
+
+As described earlier the solution is used to redact any PII data in email body and attachements so to test the application we need to provide an email file which needs to be redacted. We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. This will trigger the workflow of redacting the email body and attachment by S3 event notification triggering the Lambda. For conviniece a sample email is available in "infra/pii_redaction/sample_email" directory of the repository. Below are the steps to test application without Amazon SES using the samle email file.
+
+```sh
+# Replace <<raw_bucket>> with raw bucket name created during deployment:
+
+aws s3 cp infra/pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domains_emails/
+```
+
+Above will trigger the redaction of email process. You can track the progress in the dynamodb table <<inventory_table_name>>. A unique case_id is generated for each email being processed. Once completed you can find the redacted email body in <<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/ and redacted attachments in <<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/
+
+
 
 ## Portal
 
