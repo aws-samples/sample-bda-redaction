@@ -55,7 +55,8 @@ Set up Amazon SES with prod access and verify the domain/email identities for wh
 * [Request SES Production Access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 * [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html)
 
-Create credentials for SMTP and save it in secrets manager secret with name ```SmtpCredentials```. If using any other name for secret update the ```context.json``` line ```secret_name``` with the name of the secret created.
+Create credentials for SMTP and save it in secrets manager secret with name ```SmtpCredentials```. **Please note that an IAM user is created for this process**
+If using any other name for secret update the ```context.json``` line ```secret_name``` with the name of the secret created.
 Key for the user name in the secret should be ```smtp_username``` and key for password should be ```smtp_password``` when storing the same in secrets manager
 
 * [Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
@@ -214,11 +215,11 @@ As described earlier the solution is used to redact any PII data in email body a
 aws s3 cp infra/pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domains_emails/
 ```
 
-Above will trigger the redaction of email process. You can track the progress in the dynamodb table **<<inventory_table_name>>**. A unique case_id is generated for each email being processed. Once completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
+Above will trigger the redaction of email process. You can track the progress in the dynamodb table **<<inventory_table_name>>**. A unique **<<case_id>>** is generated and used in dynamodb inventory table for each email being processed. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
 
 #### Testing the application with Amazon SES
 
-To test an application using Amazon SES we just need to send email to verified email in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. A unique case_id is generated for each email being processed. Once completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
+To test an application using Amazon SES we just need to send email to to verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. for the  A unique **<<case_id>>** is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
 
 
 ## Portal
