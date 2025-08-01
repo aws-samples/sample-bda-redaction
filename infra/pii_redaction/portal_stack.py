@@ -55,7 +55,7 @@ class PortalStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        #Import values from other stacks
+        # Import values from other stacks
         email_table_name = Fn.import_value("EmailInventoryTableName")
         email_table_arn = Fn.import_value("EmailInventoryTableArn")
         raw_bucket = Fn.import_value("RawBucket")
@@ -68,7 +68,7 @@ class PortalStack(Stack):
         
         # S3 bucket that contains the static HTML/CSS/JS files for the portal
         private_hosting_bucket = s3.Bucket(self, 'PrivateWebHostingAssets',
-            bucket_name=stackPrefix(resource_prefix, "private-web-hosting-assets"),
+            # bucket_name=stackPrefix(resource_prefix, "private-web-hosting-assets"),
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=False,
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -385,7 +385,12 @@ class PortalStack(Stack):
             # Add inline policies for S3 PutObject, ListBucket, and Comprehend DetectPiiEntities/RedactPiiEntities
             email_forwarding_lambda_role.add_to_policy(
                 iam.PolicyStatement(
-                    actions=["s3:GetObject","s3:PutObject", "s3:ListBucket","s3:PutBucketNotification"],
+                    actions=[
+                        "s3:GetObject",
+                        "s3:PutObject", 
+                        "s3:ListBucket",
+                        "s3:PutBucketNotification"
+                    ],
                     resources=[
                         f"arn:aws:s3:::{raw_bucket}",
                         f"arn:aws:s3:::{raw_bucket}/*",
