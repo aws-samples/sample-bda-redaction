@@ -691,17 +691,17 @@ class PortalStack(Stack):
             source_arn=f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:{api.rest_api_id}/*/*/*"
         )
 
-        if len(api_domain_name) > 0:
-            # Set up custom domain for API Gateway
-            api_domain = apigateway.DomainName(self, 'ApiDomain',
-                domain_name=api_domain_name,
-                certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
-                security_policy=apigateway.SecurityPolicy.TLS_1_2,
-                mapping=api,
-                endpoint_type=apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE,
-            )
+        # if len(api_domain_name) > 0:
+        #     # Set up custom domain for API Gateway
+        #     api_domain = apigateway.DomainName(self, 'ApiDomain',
+        #         domain_name=api_domain_name,
+        #         certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
+        #         security_policy=apigateway.SecurityPolicy.TLS_1_2,
+        #         mapping=api,
+        #         endpoint_type=apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE,
+        #     )
 
-            api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
+        #     api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
 
         # API Gateway gateway response that initiates Basic Auth request
         if auth_type == 'basic':
@@ -960,5 +960,5 @@ class PortalStack(Stack):
             web_acl_arn=waf.attr_arn
         )
 
-        if len(api_domain_name) > 0:
-            self.apigw_domain_name_alias = CfnOutput(self, "ApiGwDomainNameAliasOutput", value=api_domain.domain_name_alias_domain_name, export_name="ApiGwDomainNameAlias")
+        # if len(api_domain_name) > 0:
+        #     self.apigw_domain_name_alias = CfnOutput(self, "ApiGwDomainNameAliasOutput", value=api_domain.domain_name_alias_domain_name, export_name="ApiGwDomainNameAlias")

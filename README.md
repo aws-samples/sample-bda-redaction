@@ -136,8 +136,9 @@ The following set of configuration variables are optional:
 | ------ | -------- | ------- |
 | api_gateway_vpc_endpoint_id | VPC Endpoint ID for API Gateway. Created if no value is provided. | No |
 | kms_cmk_arn | ARN of customer-managed KMS key. Created if no value is provided. | No |
-| api_domain_name | API Gateway custom domain name (must be registered as a CNAME within a Route 53 Hosted Zone that references the domain_name_alias_domain_name). | No |
-| api_domain_cert_arn | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name). | Yes, if ```api_domain_name``` is set |
+
+<!-- | api_domain_name | API Gateway custom domain name that will be used to access the portal through a web browser (must be registered as a CNAME within an [Amazon Route 53](https://aws.amazon.com/route53/) hosted zone). | No |
+| api_domain_cert_arn | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name). | Yes, if ```api_domain_name``` is set | -->
 
 #### Update Lambda Layer that contains additional PyPI packages
 
