@@ -33,6 +33,8 @@ This application requires the installation of the following software tools:
 * Terminal/CLI such as macOS Terminal, PowerShell or Windows Terminal, or the Linux command line. [AWS CloudShell](https://aws.amazon.com/cloudshell/) can also be used when all code is located within an AWS account.
 
 ### Infrastructure Prerequites
+All CloudFormation stacks need to be deployed within the same AWS account.
+
 An existing [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/create-vpc.html) that contains 3 private subnets with no internet access is needed.
 
 ### CloudFormation Stacks
@@ -221,7 +223,6 @@ Above will trigger the redaction of email process. You can track the progress in
 
 To test an application using Amazon SES we just need to send email to to verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. for the  A unique **<<case_id>>** is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
 
-
 ## Portal
 
 **IMPORTANT:** The installation of the portal is completely optional. It is only required if you want a user interface to view the redacted emails. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
@@ -238,8 +239,21 @@ This application requires the installation of the following software tools:
 Synthesize the CloudFormation template for this code by navigating to the directory root of the solution. Then run the following commands:
 
 ```sh
-cd infra
+cd sample-bda-redaction/infra/
 ```
+
+**Optional:** Create and activate a new Python virutal environment (if the virtual environment has not been created previously):
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+```
+
+```sh
+pip install -r requirements.txt
+```
+
+At this point you can now synthesize the CloudFormation template for this code. 
 
 ```sh
 JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
@@ -262,8 +276,8 @@ Within your AWS Console, navigate to API Gateway and click on **_Custom domain n
 To complete this process you will need a custom domain name. [Learn more about creating a private custom domain name](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-private-custom-domains-tutorial.html).
 
 1. Click on **_Add domain name_**.
-2. Enter the name of the domain or subdomain.
-3. Select the **_Private_** option.
+2. Enter the name of the domain or subdomain that is registered in [Amazon Route 53](https://aws.amazon.com/route53/) to be used for this portal. [Learn more about registering a new domain name with Amazon Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-register.html).
+3. Select the appropriate option of **_Public_** or **_Private_** based on the type of the Amazon Route 53 hosted zone that contains your domain name.
 4. Select **_API mappings only_** for the routing mode.
 5. Choose the proper [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) (ACM) Certificate. If an ACM certificate is not available for selection, [learn how to set up AWS Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/setup.html) and then request a [public certificate](https://docs.aws.amazon.com/acm/latest/userguide/acm-public-certificates.html).
 6. Click **_Add domain name_** to save the custom domain name configuration.
@@ -274,6 +288,8 @@ Next, configure the API Mappings:
 2. Select the stage for the API.
 3. **DO NOT** enter a value for the path input field.
 4. Click **_Save_** to save the API Mappings.
+
+#### The following steps are for private domains only:
 
 Once you complete custom domain name and API mappings, navigate to the **_Domain name access associations_** area of API Gateway.
 
@@ -345,14 +361,14 @@ Run all of the following commands from within a terminal/CLI environment.
 
 Navigate to the root of the ```app``` directory before running any of the following commands to run the local development server by running the following commands:
 
-- Install NPM packages
-```sh
-npm install
-```
-
 - Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above (if you have not performed this action previously):
 ```sh
 cp .env.example .env
+```
+
+- Install NPM packages
+```sh
+npm install
 ```
 
 - Start the local development server
@@ -387,17 +403,20 @@ VITE_BASE=
 
 Navigate to the root of the ```app``` directory before running any of the following commands to build this application for production by running the following commands:
 
-- Install NPM packages
-```sh
-npm install
-```
+Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above (if you have not performed this action previously):
 
-- Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above (if you have not performed this action previously):
 ```sh
 cp .env.example .env
 ```
 
-- Build the files
+Install NPM packages
+
+```sh
+npm install
+```
+
+Build the files
+
 ```sh
 npm run build
 ```
@@ -405,8 +424,9 @@ npm run build
 After the build succeeds, transfer all of the files within the _dist/_ directory into the Amazon S3 bucket that is designated for these assets (specified in the PortalStack provisioned via CDK).
 
 Example:
+
 ```sh
 aws s3 sync dist/ s3://<<resource_name_prefix>>-private-web-hosting-assets --delete
 ```
 
-Once the files have been transferred successfully, you can view the portal using either the API Gateway URL or the domain name that is configured to serve requests.
+Once the files have been transferred successfully, you can view the portal using either the domain name that is configured to serve requests.
