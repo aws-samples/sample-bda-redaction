@@ -31,7 +31,7 @@ class S3Stack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        ec2_boto3 = boto3.client('ec2')
+        ec2_boto3 = boto3.client('ec2',region_name=self.region)
         # Get the VPC ID from user input
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=vpc_id)
         response_dynamo_prefix = ec2_boto3.describe_managed_prefix_lists(
