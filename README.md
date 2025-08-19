@@ -79,11 +79,15 @@ The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 cd sample-bda-redaction/infra/
 ```
 
-**Optional:** Create and activate a new Python virutal environment
+**Optional:** Create and activate a new Python virutal environment (make sure you are using python 3.12 as lambda is in CDK is configured for same. If using some other python version update CDK code to reflect the same in lambda runtime)
 
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
+```
+
+```sh
+pip install --upgrade pip
 ```
 
 ```sh
