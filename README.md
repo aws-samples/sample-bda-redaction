@@ -222,7 +222,20 @@ Above will trigger the redaction of email process. You can track the progress in
 
 #### Testing the application with Amazon SES
 
-To test an application using Amazon SES we just need to send email to to verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. for the  A unique **<<case_id>>** is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
+Before starting the test make sure Amazon SES Email Receiving rule set created by the <<resource_name_prefix>>-ConsumerStack stack is active. We can check by executing below command and make sure name in the output is "<<resource_name_prefix>>-rule-set"
+
+```sh
+aws ses describe-active-receipt-rule-set
+```
+If the name does not match execute below to activate the same
+
+```sh
+# Replace <<resource_name_prefix>> with resource_name_prefix used in context.json
+
+aws ses set-active-receipt-rule-set --rule-set-name <<resource_name_prefix>>-rule-set
+```
+
+Once we have the correct rule set active; to test the application using Amazon SES we just need to send email to the verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. for the  A unique **<<case_id>>** is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
 
 ## Portal
 
