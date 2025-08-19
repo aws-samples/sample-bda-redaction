@@ -9,7 +9,7 @@ rm -f layer_content.zip
 mkdir -p python
 
 # Install packages
-pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t python/  
+pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t python/  --no-cache-dir
 
 # Remove unnecessary files to reduce size
 find python -type d -name "tests" -exec rm -rf {} +
