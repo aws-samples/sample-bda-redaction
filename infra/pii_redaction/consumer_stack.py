@@ -86,7 +86,7 @@ class ConsumerStack(Stack):
         cfn_guardrail = bedrock.CfnGuardrail(self, "piiRedactionGuardrail",
                             blocked_input_messaging="Guardrail applied based on the input.",
                             blocked_outputs_messaging="Guardrail applied based on output.",
-                            name="piiRedactionGuardrail",
+                            name=stackPrefix(resource_prefix, "piiRedactionGuardrail"),
                             sensitive_information_policy_config=bedrock.CfnGuardrail.SensitiveInformationPolicyConfigProperty(
                             pii_entities_config=[
                             bedrock.CfnGuardrail.PiiEntityConfigProperty(
