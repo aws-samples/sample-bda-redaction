@@ -20,10 +20,7 @@ from aws_cdk import (
     aws_scheduler_targets_alpha as targets,
     aws_s3 as s3,
     aws_ec2 as ec2,
-    aws_wafv2 as wafv2,
     aws_secretsmanager as secretsmanager,
-    aws_cloudtrail as cloudtrail,
-    aws_kms as kms,
     aws_certificatemanager as acm,
     custom_resources as cr
 )
@@ -40,15 +37,8 @@ class PortalStack(Stack):
         vpc_id: str, 
         resource_prefix: str,
         environment: str,
-        authorized_users: list[str],
-        oidc_jwks_uri: str,
-        oidc_issuer: str,
-        oidc_audience: str,
-        auth_type: str,
         secret_name: str,
         auto_reply_from_email: str,
-        api_gateway_vpc_endpoint_id: str,
-        kms_cmk_arn: str,
         api_domain_name: str,
         api_domain_cert_arn: str,
         **kwargs
@@ -68,9 +58,8 @@ class PortalStack(Stack):
         
         # S3 bucket that contains the static HTML/CSS/JS files for the portal
         private_hosting_bucket = s3.Bucket(self, 'PrivateWebHostingAssets',
-            # bucket_name=stackPrefix(resource_prefix, "private-web-hosting-assets"),
             removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=False,
+            auto_delete_objects=True,
             encryption=s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
             versioned=True,
@@ -133,83 +122,6 @@ class PortalStack(Stack):
                     point_in_time_recovery_enabled=True)
         )
 
-        # Create S3 bucket for dynamo_trail with access logging enabled
-        key = None
-        if len(kms_cmk_arn):
-            key = kms.Key.from_key_arn(self, 'ExistingEncryptionKey', key_arn=kms_cmk_arn)
-        else:
-            key = kms.Key(self, 'DynamoDataPlaneEncryptionKey',
-                enable_key_rotation=True,
-                removal_policy=RemovalPolicy.DESTROY,
-                policy=iam.PolicyDocument(
-                    statements=[
-                        iam.PolicyStatement(
-                            actions=[
-                                "kms:*"
-                            ],
-                            resources=["*"],
-                            principals=[iam.AccountRootPrincipal()]
-                        ),
-                        iam.PolicyStatement(
-                            actions=[
-                                "kms:GenerateDataKey*",
-                                "kms:Decrypt"
-                            ],
-                            resources=["*"],
-                            principals=[iam.ServicePrincipal("cloudtrail.amazonaws.com")]
-                        )
-                    ]
-                )
-            )
-
-        # DynamoDB data plane logging to CloudTrail
-        dynamo_trail_bucket = s3.Bucket(self, 'DynamodbDataPlaneTrailBucket',
-            removal_policy=RemovalPolicy.RETAIN,
-            auto_delete_objects=False,
-            encryption=s3.BucketEncryption.S3_MANAGED,
-            enforce_ssl=True,
-            versioned=True,
-            public_read_access=False,
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
-            server_access_logs_bucket=access_logs_bucket,
-            server_access_logs_prefix="dynamodb-data-plane-trail/"
-        )
-
-        access_logs_bucket.add_to_resource_policy(iam.PolicyStatement(
-            effect=iam.Effect.ALLOW,
-            actions=["s3:PutObject"],
-            resources=[
-                dynamo_trail_bucket.bucket_arn,
-                f"{dynamo_trail_bucket.bucket_arn}/*"
-            ],
-            principals=[iam.AccountPrincipal("logging.s3.amazonaws.com")]
-        ))
-
-        dynamo_trail = cloudtrail.Trail(self, stackPrefix(resource_prefix, 'DynamodbDataPlaneTrail'),
-            trail_name=stackPrefix(resource_prefix, 'dynamodb-data-plane-trail'),
-            send_to_cloud_watch_logs=False,
-            is_multi_region_trail=True,
-            bucket=dynamo_trail_bucket,
-            encryption_key=key,
-            enable_file_validation=True
-        )
-
-        # Configure data plane logging for the DynamoDB tables and which actions to log
-        cfn_trail = cast(cloudtrail.CfnTrail, dynamo_trail.node.default_child)
-        cfn_trail.event_selectors = [{
-            'data_resources': [{
-                'type': 'AWS::DynamoDB::Table',
-                'values': [
-                    rules_tbl.table_arn,
-                    messages_tbl.table_arn,
-                    folders_tbl.table_arn,
-                    users_tbl.table_arn
-                ]
-            }],
-            'include_management_events': False,
-            'read_write_type': 'All'
-        }]
-
         # Initialize folders table with default folder
         cr.AwsCustomResource(self, "InitFoldersTable",
             on_create=cr.AwsSdkCall(
@@ -234,30 +146,6 @@ class PortalStack(Stack):
             timeout=Duration.minutes(1),
             log_retention=logs.RetentionDays.ONE_WEEK
         )
-
-        # Initialize users table with list of authorized users
-        if len(authorized_users):
-            cr.AwsCustomResource(self, "InitUsersTable",
-                on_create=cr.AwsSdkCall(
-                    action="batchWriteItem",
-                    service="DynamoDB",
-                    parameters={
-                        "RequestItems": {
-                            users_tbl.table_name: [
-                                {"PutRequest": {"Item": {"ID": {"S": user}}}}
-                                for user in authorized_users
-                            ]
-                        }
-                    },
-                    physical_resource_id=cr.PhysicalResourceId.of(f"BatchWrite-{users_tbl.table_name}")
-                ),
-                policy=cr.AwsCustomResourcePolicy.from_sdk_calls(
-                    resources=[users_tbl.table_arn]
-                ),
-                removal_policy=RemovalPolicy.RETAIN,
-                timeout=Duration.minutes(1),
-                log_retention=logs.RetentionDays.ONE_WEEK
-            )
 
         redacted_bucket = s3.Bucket.from_bucket_name(self, 'RedactedAttachmentsBucket', redacted_bucket_name)
 
@@ -451,73 +339,43 @@ class PortalStack(Stack):
             description="Allow HTTPS"
         )
 
-        if auth_type == 'basic':
-            # Secret that contains the Basic Auth credentials to access the portal
-            secret = secretsmanager.Secret(self, 'PiiRedactionPortalAuthSecret',
-                secret_name=stackPrefix(resource_prefix, "PiiRedactionPortalAuthSecret"),
-                description='Credentials for PII Redaction using Amazon Bedrock portal application',
-                generate_secret_string=secretsmanager.SecretStringGenerator(
-                    secret_string_template=json.dumps({'username': 'pii_redaction_email_admin'}),
-                    generate_string_key='password',
-                    exclude_punctuation=True,
-                    include_space=False
-                )
+        # Secret that contains the Basic Auth credentials to access the portal
+        secret = secretsmanager.Secret(self, 'PiiRedactionPortalAuthSecret',
+            secret_name=stackPrefix(resource_prefix, "PiiRedactionPortalAuthSecret"),
+            description='Credentials for PII Redaction using Amazon Bedrock portal application',
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template=json.dumps({'username': 'pii_redaction_email_admin'}),
+                generate_string_key='password',
+                exclude_punctuation=True,
+                include_space=False
             )
-
-            lambda_auth_handler = lambda_.Function(self, 'LambdaAuthHandler',
-                function_name=stackPrefix(resource_prefix, "LambdaAuthHandler"),
-                runtime=lambda_.Runtime.PYTHON_3_12,
-                code=lambda_.Code.from_asset(os.path.join(os.path.dirname(__file__), 'lambda')),
-                handler='basic_auth_authorizer.handler',
-                environment={
-                    'ENVIRONMENT': 'development',
-                    'SECRET_ARN': secret.secret_full_arn
-                },
-                layers=[powertools_layer],
-                memory_size=512,
-                timeout=Duration.seconds(60),
-                logging_format=lambda_.LoggingFormat.TEXT,
-                vpc=vpc,
-                vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-                security_groups=[lambda_auth_security_group],
-                log_group=logs.LogGroup(self, 'LambdaAuthHandlerLogGroup', 
-                    log_group_name=stackPrefix(resource_prefix, "LambdaAuthHandlerLogGroup"),
-                    removal_policy=RemovalPolicy.DESTROY
-                ),
-                tracing=lambda_.Tracing.ACTIVE
-            )
-            lambda_auth_handler_role = lambda_auth_handler.role
-            secret.grant_read(lambda_auth_handler_role)
-        else:
-            # Lambda function that is the authorizer for the API Gateway that handles OIDC authorization
-            lambda_auth_handler = lambda_.Function(self, 'LambdaAuthHandler',
-                function_name=stackPrefix(resource_prefix, "LambdaAuthHandler"),
-                runtime=lambda_.Runtime.PYTHON_3_12,
-                code=lambda_.Code.from_asset(os.path.join(os.path.dirname(__file__), 'lambda')),
-                handler='oidc_authorizer.lambda_handler',
-                environment={
-                    'ENVIRONMENT': 'development',
-                    'USERS_TABLE_NAME': users_tbl.table_name,
-                    'JWKS_URI': oidc_jwks_uri,
-                    'OIDC_ISSUER': oidc_issuer,
-                    'OIDC_AUDIENCE': oidc_audience,
-                    'OIDC_ALGO': 'RS256',
-                },
-                layers=[powertools_layer, packages_layer],
-                memory_size=512,
-                timeout=Duration.seconds(60),
-                logging_format=lambda_.LoggingFormat.TEXT,
-                vpc=vpc,
-                vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-                security_groups=[lambda_auth_security_group],
-                log_group=logs.LogGroup(self, 'LambdaAuthHandlerLogGroup', 
-                    log_group_name=stackPrefix(resource_prefix, "LambdaAuthHandlerLogGroup"),
-                    removal_policy=RemovalPolicy.DESTROY
-                ),
-                tracing=lambda_.Tracing.ACTIVE
-            )
-            lambda_auth_handler_role = lambda_auth_handler.role
-            users_tbl.grant_read_data(lambda_auth_handler_role)
+        )
+        
+        # Basic Auth
+        lambda_auth_handler = lambda_.Function(self, 'LambdaAuthHandler',
+            function_name=stackPrefix(resource_prefix, "LambdaAuthHandler"),
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            code=lambda_.Code.from_asset(os.path.join(os.path.dirname(__file__), 'lambda')),
+            handler='basic_auth_authorizer.handler',
+            environment={
+                'ENVIRONMENT': 'development',
+                'SECRET_ARN': secret.secret_full_arn
+            },
+            layers=[powertools_layer],
+            memory_size=512,
+            timeout=Duration.seconds(60),
+            logging_format=lambda_.LoggingFormat.TEXT,
+            vpc=vpc,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+            security_groups=[lambda_auth_security_group],
+            log_group=logs.LogGroup(self, 'LambdaAuthHandlerLogGroup', 
+                log_group_name=stackPrefix(resource_prefix, "LambdaAuthHandlerLogGroup"),
+                removal_policy=RemovalPolicy.DESTROY
+            ),
+            tracing=lambda_.Tracing.ACTIVE
+        )
+        lambda_auth_handler_role = lambda_auth_handler.role
+        secret.grant_read(lambda_auth_handler_role)
 
         portal_api_handler_role = portal_lambda_handler.role
         redacted_bucket.grant_read(portal_api_handler_role)
@@ -584,35 +442,6 @@ class PortalStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
-        # VPC Endpoint for API Gateway
-        if len(api_gateway_vpc_endpoint_id) == 0:
-            apigw_endpoint = ec2.InterfaceVpcEndpoint(self,
-                "PiiRedactionApiGwInterfaceEndpoint",
-                vpc=vpc,
-                service=ec2.InterfaceVpcEndpointAwsService.APIGATEWAY,
-                subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-                security_groups=[lambda_auth_security_group],
-                private_dns_enabled=True
-            )
-
-            # Any API Gateway should flow through the VPC Endpoint
-            apigw_endpoint.add_to_policy(
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    actions=["execute-api:Invoke"],
-                    resources=[
-                        f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:*/*/*/*"
-                    ],
-                    principals=[iam.AnyPrincipal()]
-                )
-            )
-        else:
-            apigw_endpoint = ec2.InterfaceVpcEndpoint.from_interface_vpc_endpoint_attributes(self,
-                "PiiRedactionApiGwInterfaceEndpoint",
-                vpc_endpoint_id=api_gateway_vpc_endpoint_id,
-                port=443
-            )
-
         api = apigateway.RestApi(self, 'PiiRedactionInfraAPI',
             rest_api_name=stackPrefix(resource_prefix, "PiiRedactionInfraAPI"),
             description='API for PII Redaction using Amazon Bedrock portal',
@@ -640,26 +469,8 @@ class PortalStack(Stack):
             ),
             cloud_watch_role=True,
             cloud_watch_role_removal_policy=RemovalPolicy.DESTROY,
-            endpoint_configuration=apigateway.EndpointConfiguration(
-                types=[apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE],
-                vpc_endpoints=[apigw_endpoint]
-            ),
             policy=iam.PolicyDocument(
                 statements=[
-                    # Allow access only from specific VPC Endpoint
-                    iam.PolicyStatement(
-                        effect=iam.Effect.ALLOW,
-                        actions=['execute-api:Invoke'],
-                        resources=[
-                            f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:*/*/*/*"
-                        ],
-                        principals=[iam.AnyPrincipal()],
-                        conditions={
-                            'StringEquals': {
-                                'aws:sourceVpce': apigw_endpoint.vpc_endpoint_id
-                            }
-                        } if environment != 'local' else None
-                    ),
                     iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
                         actions=['lambda:InvokeFunction'],
@@ -691,31 +502,30 @@ class PortalStack(Stack):
             source_arn=f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:{api.rest_api_id}/*/*/*"
         )
 
-        # if len(api_domain_name) > 0:
-        #     # Set up custom domain for API Gateway
-        #     api_domain = apigateway.DomainName(self, 'ApiDomain',
-        #         domain_name=api_domain_name,
-        #         certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
-        #         security_policy=apigateway.SecurityPolicy.TLS_1_2,
-        #         mapping=api,
-        #         endpoint_type=apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE,
-        #     )
+        if len(api_domain_name) > 0:
+            # Set up custom domain for API Gateway
+            api_domain = apigateway.DomainName(self, 'ApiDomain',
+                domain_name=api_domain_name,
+                certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
+                security_policy=apigateway.SecurityPolicy.TLS_1_2,
+                mapping=api,
+                endpoint_type=apigateway.EndpointType.REGIONAL
+            )
 
-        #     api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
+            api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
 
         # API Gateway gateway response that initiates Basic Auth request
-        if auth_type == 'basic':
-            apigateway.GatewayResponse(self, 'GatewayResponse',
-                rest_api=api,
-                type=apigateway.ResponseType.UNAUTHORIZED,
-                response_headers={
-                    'method.response.header.WWW-Authenticate': "'Basic'"
-                },
-                status_code='401',
-                templates={
-                    'application/json': "{ 'message': $context.error.messageString }"
-                }
-            )
+        apigateway.GatewayResponse(self, 'GatewayResponse',
+            rest_api=api,
+            type=apigateway.ResponseType.UNAUTHORIZED,
+            response_headers={
+                'method.response.header.WWW-Authenticate': "'Basic'"
+            },
+            status_code='401',
+            templates={
+                'application/json': "{ 'message': $context.error.messageString }"
+            }
+        )
 
         # Integration for UI-related endpoints that service static assets
         static_hosting_integration = apigateway.AwsIntegration(
@@ -819,15 +629,9 @@ class PortalStack(Stack):
         apiResources = api.root.add_resource("api", 
             default_integration=LambdaIntegrationNoPermission(portal_lambda_handler), 
             default_method_options=apigateway.MethodOptions(
-                authorizer=authorizer if auth_type == 'oidc' else None,
-                authorization_type=apigateway.AuthorizationType.CUSTOM if auth_type == 'oidc' else None
-            ),
-            default_cors_preflight_options={
-                'allow_origins': apigateway.Cors.ALL_ORIGINS,
-                'allow_methods': apigateway.Cors.ALL_METHODS,
-                'allow_headers': apigateway.Cors.DEFAULT_HEADERS,
-                'disable_cache': True
-            } if environment == 'local' else None,
+                authorizer=None,
+                authorization_type=None
+            )
         )
         messages = apiResources.add_resource('messages')
         messages.add_method('GET',  operation_name='getMessages')
@@ -902,63 +706,7 @@ class PortalStack(Stack):
             schedule_name=stackPrefix(resource_prefix, "RulesProcessingSchedule"),
         )
 
-        waf = wafv2.CfnWebACL(self, 'PiiRedactionInfraPocWAF',
-            name=stackPrefix(resource_prefix, "PiiRedactionInfraPocWAF"),
-            description='Web Application Firewall for Multimodal PII Redaction',
-            default_action=wafv2.CfnWebACL.DefaultActionProperty(
-                allow={}
-            ),
-            scope='REGIONAL',
-            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
-                cloud_watch_metrics_enabled=True,
-                metric_name='MetricForWebACLCDK',
-                sampled_requests_enabled=True
-            ),
-            rules=[
-                wafv2.CfnWebACL.RuleProperty(
-                    name='CRSRule',
-                    priority=0,
-                    statement=wafv2.CfnWebACL.StatementProperty(
-                        managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
-                            vendor_name='AWS',
-                            name='AWSManagedRulesCommonRuleSet'
-                        )
-                    ),
-                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
-                        cloud_watch_metrics_enabled=True,
-                        metric_name='MetricForWebACLCDK-CRS',
-                        sampled_requests_enabled=True
-                    ),
-                    override_action=wafv2.CfnWebACL.OverrideActionProperty(
-                        none={}
-                    )
-                ),
-                wafv2.CfnWebACL.RuleProperty(
-                    name='IPReputationList',
-                    priority=1,
-                    statement=wafv2.CfnWebACL.StatementProperty(
-                        managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
-                            vendor_name='AWS',
-                            name='AWSManagedRulesAmazonIpReputationList'
-                        )
-                    ),
-                    visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
-                        cloud_watch_metrics_enabled=True,
-                        metric_name='MetricForWebACLCDK-IPReputationList',
-                        sampled_requests_enabled=True
-                    ),
-                    override_action=wafv2.CfnWebACL.OverrideActionProperty(
-                        none={}
-                    )
-                )
-            ]
-        )
-
-        # Associate AWS WAF with the API Gateway stage
-        wafv2.CfnWebACLAssociation(self, 'PiiRedactionInfraPocWAFAssociation',
-            resource_arn=api.deployment_stage.stage_arn,
-            web_acl_arn=waf.attr_arn
-        )
+        self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
 
         self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
 

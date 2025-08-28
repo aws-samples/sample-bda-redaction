@@ -29,13 +29,6 @@ if context_values:
     resource_name_prefix = context_values['resource_names'].get('resource_name_prefix', 'ResourceNamePrefix')
     domain = context_values['resource_names'].get('domain', 'domain')
     environment = context_values['resource_names'].get('environment', 'environment')
-    oidc_audience = context_values['resource_names'].get('oidc_audience', 'oidc_audience')
-    oidc_jwks_uri = context_values['resource_names'].get('oidc_jwks_uri', 'oidc_jwks_uri')
-    oidc_issuer = context_values['resource_names'].get('oidc_issuer', 'oidc_issuer')
-    authorized_users = context_values['resource_names'].get('authorized_users', 'authorized_users')
-    auth_type = context_values['resource_names'].get('auth_type', 'auth_type')
-    api_gateway_vpc_endpoint_id = context_values['resource_names'].get('api_gateway_vpc_endpoint_id')
-    kms_cmk_arn = context_values['resource_names'].get('kms_cmk_arn')
     api_domain_name = context_values['resource_names'].get('api_domain_name')
     api_domain_cert_arn = context_values['resource_names'].get('api_domain_cert_arn')
 else:
@@ -48,7 +41,6 @@ s3_stack = S3Stack(app, stackPrefix(resource_name_prefix, "S3Stack"),
     redacted_bucket_name=redacted_bucket_name,
     table_name=inventory_table_name,
     vpc_id=vpc_id,
-    # secret_name=secret_name,
     retention=retention,
     resource_prefix=resource_name_prefix,
     environment=environment
@@ -56,7 +48,6 @@ s3_stack = S3Stack(app, stackPrefix(resource_name_prefix, "S3Stack"),
 
 consumer_stack = ConsumerStack(app, stackPrefix(resource_name_prefix, "ConsumerStack"), 
     env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
-    # secret_name=secret_name,
     vpc_id=vpc_id,
     retention=retention,
     resource_prefix=resource_name_prefix,
@@ -68,15 +59,8 @@ portal_stack = PortalStack(app, stackPrefix(resource_name_prefix, "PortalStack")
     vpc_id=vpc_id,
     resource_prefix=resource_name_prefix,
     environment=environment,
-    oidc_audience=oidc_audience,
-    oidc_jwks_uri=oidc_jwks_uri,
-    oidc_issuer=oidc_issuer,
-    authorized_users=authorized_users,
-    auth_type=auth_type,
     secret_name=secret_name,
     auto_reply_from_email=auto_reply_from_email,
-    api_gateway_vpc_endpoint_id=api_gateway_vpc_endpoint_id,
-    kms_cmk_arn=kms_cmk_arn,
     api_domain_name=api_domain_name,
     api_domain_cert_arn=api_domain_cert_arn
 )
