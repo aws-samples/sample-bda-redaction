@@ -3,7 +3,7 @@
 ## Solution Architecture 
 The following diagram outlines the solution architecture. 
 
-<img alt="PII Detection Redaction Amazon Bedrock" src="https://github.com/user-attachments/assets/a57f9fa2-f02b-44cd-92dc-39e1f8c09e8b" />
+<img alt="PII Detection Redaction Amazon Bedrock" src="./assets/pii_detection_redcation_solution_diagram.png" />
 
 The diagram illustrates the backend PII detection and redaction workflow and the frontend application user interface orchestrated by [AWS Lambda](https://aws.amazon.com/lambda/) and [Amazon EventBridge](https://aws.amazon.com/eventbridge/). The process follows these steps:
 1.	The workflow starts with the user sending an email to the incoming email server hosted on [Amazon Simple Email Service](https://aws.amazon.com/ses/) (Amazon SES)(optional). 
