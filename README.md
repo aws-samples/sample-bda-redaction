@@ -15,11 +15,10 @@ The diagram illustrates the backend PII detection and redaction workflow and the
 7.	DynamoDB tables are updated with email messages, folders metadata, and email filtering rules. 
 8.	An Amazon EventBridge Scheduler is used to run the Rules Engine Lambda on a schedule which will process new emails that have yet to be categorized into folders based on enabled email filtering rules criteria. 
 9.	The Rules Engine Lambda also communicates with DynamoDB to access the messages table and the rules table.
-10.	Users access the application user interface with Basic Authentication.
-11.	[Amazon API Gateway](https://aws.amazon.com/api-gateway/) manages user API requests.
-12.	A Portal API Lambda fetches the case details based on user requests.
-13.	The static assets served by API Gateway are stored in a private S3 bucket.
-14.	[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) provide visibility into the PII detection and redaction process, while [Amazon Simple Notification Service](https://aws.amazon.com/sns/) delivers real-time alerts for any failures, ensuring immediate attention to issues.
+10.	Users access the application user interface with Basic Authentication and [Amazon API Gateway](https://aws.amazon.com/api-gateway/) manages user API requests.
+11.	A Portal API Lambda fetches the case details based on user requests.
+12.	The static assets served by API Gateway are stored in a private S3 bucket.
+13.	[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) provide visibility into the PII detection and redaction process, while [Amazon Simple Notification Service](https://aws.amazon.com/sns/) delivers real-time alerts for any failures, ensuring immediate attention to issues.
 
 ## Infrastructure
 
