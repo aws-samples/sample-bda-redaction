@@ -44,7 +44,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 
 * **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured, Lambda layers for dependency management, and S3 event notifications to trigger the email processing workflow automatically.
 
-* **PortalStack (optional)** - Provisions the optional web interface including a private API Gateway with Lambda authorizers for Basic Auth or OIDC authentication, DynamoDB tables for folders and rules management, and S3 buckets for static web assets with WAF protection. It also creates EventBridge schedulers for automated rules processing, CloudTrail logging for DynamoDB data plane operations, and Lambda functions for portal API handling and email forwarding functionality when configured.
+* **PortalStack (optional)** - Provisions the optional web interface including a regional API Gateway with Lambda authorizers for Basic Auth or OIDC authentication, DynamoDB tables for folders and rules management, and S3 buckets for static web assets with WAF protection. It also creates EventBridge schedulers for automated rules processing, CloudTrail logging for DynamoDB data plane operations, and Lambda functions for portal API handling and email forwarding functionality when configured.
 
 ### Amazon SES (optional)
 
@@ -57,9 +57,11 @@ Set up Amazon SES with prod access and verify the domain/email identities for wh
 * [Request SES Production Access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 * [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html)
 
-Create credentials for SMTP and save it in secrets manager secret with name ```SmtpCredentials```. **Please note that an IAM user is created for this process**
-If using any other name for secret update the ```context.json``` line ```secret_name``` with the name of the secret created.
-Key for the user name in the secret should be ```smtp_username``` and key for password should be ```smtp_password``` when storing the same in secrets manager
+Create credentials for SMTP and save it in secrets manager secret with name `SmtpCredentials`. **Please note that an IAM user is created for this process**
+
+If using any other name for secret update the `context.json` line `secret_name` with the name of the secret created.
+
+Key for the user name in the secret should be `smtp_username` and key for password should be `smtp_password` when storing the same in secrets manager
 
 * [Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
 
@@ -86,20 +88,25 @@ python3 -m venv .venv
 . .venv/bin/activate
 ```
 
+Upgrade pip
+
 ```sh
 pip install --upgrade pip
 ```
+
+Install Python packages
 
 ```sh
 pip install -r requirements.txt
 ```
 
-Create ```context.json``` file
+Create `context.json` file
+
 ```sh
 cp context.json.example context.json
 ```
 
-Update the ```context.json``` file with the correct configuration options for the environment.
+Update the `context.json` file with the correct configuration options for the environment.
 
 | Property Name | Default | Description | When to Create |
 | ------ | ---- | -------- | ---- |
@@ -108,23 +115,23 @@ Update the ```context.json``` file with the correct configuration options for th
 | redacted_bucket_name |None| S3 bucket storing redacted messages and attachments | Created during CDK deployment |
 | inventory_table_name |None| DynamoDB table name storing redacted message details | Created during CDK deployment |
 | resource_name_prefix |None| Prefix used when naming resources during the stack creation | During stack creation |
-| retention | ```90``` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
+| retention | `90` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
 
 The following properties are only required when the portal is being provisioned.
 
 | Property Name | Default | Description | 
 | ------ | ---- | -------- | 
-| environment | ```development``` | The type of environment where resources will be provisioned. Values are ```local```, ```development```, ```production```. Setting this property to ```local``` will make create a regional API Gateway. Otherwise, it will be a private API Gateway | 
-| auth_type | ```basic``` | The type of authentication used. Values are either ```basic``` or ```oidc```  | 
+| environment | `development` | The type of environment where resources will be provisioned. Values are `development` or `production` | 
+| auth_type | `basic` | The type of authentication used. Values are either `basic` or `oidc`  | 
 
-The following set of configuration variables are only required if ```auth_type``` is set to ```oidc``` and the portal is being provisioned.
+The following set of configuration variables are only required if `auth_type` is set to `oidc` and the portal is being provisioned.
 
 | Property Name | Default | Description |
 | ------ | ---- | -------- |
 | oidc_audience |None| The unique identifier of the API |
 | oidc_jwks_uri |None| The OIDC JWKS URI |
 | oidc_issuer |None| The URI of the OIDC OP |
-| authorized_users | ```[]``` | List of users identifiers that are authorized to use this application |
+| authorized_users | `[]` | List of users identifiers that are authorized to use this application |
 
 Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional.
 
@@ -138,7 +145,6 @@ The following set of configuration variables are optional:
 
 | Property Name | Description | Required |
 | ------ | -------- | ------- |
-| api_gateway_vpc_endpoint_id | VPC Endpoint ID for API Gateway. Created if no value is provided. | No |
 | kms_cmk_arn | ARN of customer-managed KMS key. Created if no value is provided. | No |
 
 <!-- | api_domain_name | API Gateway custom domain name that will be used to access the portal through a web browser (must be registered as a CNAME within an [Amazon Route 53](https://aws.amazon.com/route53/) hosted zone). | No |
@@ -149,29 +155,13 @@ The following set of configuration variables are optional:
 Build the lambda layers
 
 ```sh
-cd pii_redaction/lambda
-
-cd lambda-layer
-chmod +x build_layer.sh
-./build_layer.sh
-
-cd ..
-cd attachmentProcessing/lambda-layer
-chmod +x build_layer.sh
-./build_layer.sh
-
-cd ../..
-cd emailProcessing/lambda-layer
-chmod +x build_layer.sh
-./build_layer.sh
-
-# Navigate back to the root of the infra directory
-cd ../../../..
+chmod +x setup_layers.sh
+./setup_layers.sh
 ```
 
 #### Deploy Infrastructure
 
-Run the following commands from the root of the ```infra``` directory:
+Run the following commands from the root of the `infra` directory:
 
 Bootstrap the AWS account to use AWS CDK
 ```sh
@@ -192,7 +182,7 @@ JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deplo
 ### Validation
 
 #### Deployment
-Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through ```stderr``` in the Terminal/CLI environment. 
+Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
 * [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
 
 Once deployment issues have been resolved, redeploy the stack using the following commands:
@@ -214,7 +204,11 @@ In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com
 
 #### Testing the application without Amazon SES
 
-As described earlier the solution is used to redact any PII data in email body and attachements so to test the application we need to provide an email file which needs to be redacted. We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. This will trigger the workflow of redacting the email body and attachment by S3 event notification triggering the Lambda. For conviniece a sample email is available in **"infra/pii_redaction/sample_email"** directory of the repository. Below are the steps to test application without Amazon SES using the samle email file.
+As described earlier the solution is used to redact any PII data in email body and attachements so to test the application we need to provide an email file which needs to be redacted. 
+
+We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. This will trigger the workflow of redacting the email body and attachment by S3 event notification triggering the Lambda. 
+
+For conviniece a sample email is available in **"infra/pii_redaction/sample_email"** directory of the repository. Below are the steps to test application without Amazon SES using the samle email file.
 
 ```sh
 # Replace <<raw_bucket>> with raw bucket name created during deployment:
@@ -222,11 +216,15 @@ As described earlier the solution is used to redact any PII data in email body a
 aws s3 cp infra/pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domain_emails/
 ```
 
-Above will trigger the redaction of email process. You can track the progress in the dynamodb table **<<inventory_table_name>>**. A unique **<<case_id>>** is generated and used in dynamodb inventory table for each email being processed. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
+Above will trigger the redaction of email process. You can track the progress in the dynamodb table `<<inventory_table_name>>`. A unique `<<case_id>>` is generated and used in dynamodb inventory table for each email being processed. 
+
+Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID `EmailInventoryTable`. 
+
+Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
 
 #### Testing the application with Amazon SES
 
-Before starting the test make sure Amazon SES Email Receiving rule set created by the <<resource_name_prefix>>-ConsumerStack stack is active. We can check by executing below command and make sure name in the output is "<<resource_name_prefix>>-rule-set"
+Before starting the test make sure Amazon SES Email Receiving rule set created by the `<<resource_name_prefix>>-ConsumerStack` stack is active. We can check by executing below command and make sure name in the output is `<<resource_name_prefix>>-rule-set`
 
 ```sh
 aws ses describe-active-receipt-rule-set
@@ -239,7 +237,11 @@ If the name does not match execute below to activate the same
 aws ses set-active-receipt-rule-set --rule-set-name <<resource_name_prefix>>-rule-set
 ```
 
-Once we have the correct rule set active; to test the application using Amazon SES we just need to send email to the verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. You can track the progress in the dynamodb table **<<inventory_table_name>>**. Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID **EmailInventoryTable**. for the  A unique **<<case_id>>** is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/** and redacted attachments in **<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/**
+Once we have the correct rule set active; to test the application using Amazon SES we just need to send email to the verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. 
+
+You can track the progress in the dynamodb table `<<inventory_table_name>>`. Inventory table name can be found on the resources tab in the AWS CloudFormation Console for the `<<resource_name_prefix>>-S3Stack` stack and Logical ID `EmailInventoryTable`. 
+
+A unique `<<case_id>>` is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
 
 ## Portal
 
@@ -287,9 +289,7 @@ The first-time deployment should take approximately 10 minutes to complete.
 
 ### API Gateway Custom Domain Setup
 
-An API Gateway Custom Domain is required for deployment since the API Gateway provisioned by the ```PortalStack``` CloudFormation stack is a private API Gateway. 
-
-Within your AWS Console, navigate to API Gateway and click on **_Custom domain names_** link in the API Gateway navigation menu on the left-hand side of the screen.
+An API Gateway Custom Domain is required for deployment. Within your AWS Console, navigate to API Gateway and click on **_Custom domain names_** link in the API Gateway navigation menu on the left-hand side of the screen.
 
 To complete this process you will need a custom domain name. [Learn more about creating a private custom domain name](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-private-custom-domains-tutorial.html).
 
@@ -408,10 +408,6 @@ By default, the preview of the production build will run locally on port **4173*
 
 ### Deployment
 
-**IMPORTANT:** This portal is designed to be run within an environment that has access to the AWS VPC that was set in the ```context.json``` file. Access to this portal from another environment or publicly will be denied.
-
-To bypass the creation of a private API Gateway, set the ```environment``` property in ```context.json``` to ```local``` to create a regional API Gateway.
-
 Run all of the following commands from within a terminal/CLI environment.
 
 Change the value of ```VITE_BASE``` in the ```.env``` file:
@@ -420,12 +416,6 @@ VITE_BASE=
 ```
 
 Navigate to the root of the ```app``` directory before running any of the following commands to build this application for production by running the following commands:
-
-Create an environment file and fill in the values for the necessary environment variables as described in the **Environment Variables** section above (if you have not performed this action previously):
-
-```sh
-cp .env.example .env
-```
 
 Install NPM packages
 
@@ -444,7 +434,9 @@ After the build succeeds, transfer all of the files within the _dist/_ directory
 Example:
 
 ```sh
-aws s3 sync dist/ s3://<<resource_name_prefix>>-private-web-hosting-assets --delete
+# <<name-of-s3-bucket>> is the S3 bucket that was created in the <<resource-name-prefix>>-PortalStack CloudFormation template with the Logical ID of PrivateWebHostingAssets
+
+aws s3 sync dist/ s3://<<name-of-s3-bucket>> --delete
 ```
 
 Once the files have been transferred successfully, you can view the portal using either the domain name that is configured to serve requests.
