@@ -116,8 +116,8 @@ Update the `context.json` file with the correct configuration options for the en
 | inventory_table_name |None| DynamoDB table name storing redacted message details | Created during CDK deployment |
 | resource_name_prefix |None| Prefix used when naming resources during the stack creation | During stack creation |
 | retention | `90` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
-| api_domain_name | API Gateway custom domain name that will be used to access the portal through a web browser (must be registered as a CNAME within an [Amazon Route 53](https://aws.amazon.com/route53/) hosted zone). | Yes |
-| api_domain_cert_arn | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name). | Yes |
+| api_domain_name | | API Gateway custom domain name that will be used to access the portal through a web browser (must be registered as a CNAME within an [Amazon Route 53](https://aws.amazon.com/route53/) hosted zone) | Needs to be created prior to execution | 
+| api_domain_cert_arn |  | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name) | Needs to be created prior to execution |
 
 The following properties are only required when the portal is being provisioned.
 
