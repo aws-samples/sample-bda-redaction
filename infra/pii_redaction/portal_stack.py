@@ -47,7 +47,6 @@ class PortalStack(Stack):
         auth_type: str,
         secret_name: str,
         auto_reply_from_email: str,
-        api_gateway_vpc_endpoint_id: str,
         kms_cmk_arn: str,
         api_domain_name: str,
         api_domain_cert_arn: str,
@@ -70,7 +69,7 @@ class PortalStack(Stack):
         private_hosting_bucket = s3.Bucket(self, 'PrivateWebHostingAssets',
             # bucket_name=stackPrefix(resource_prefix, "private-web-hosting-assets"),
             removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=False,
+            auto_delete_objects=True,
             encryption=s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
             versioned=True,
@@ -165,7 +164,7 @@ class PortalStack(Stack):
         # DynamoDB data plane logging to CloudTrail
         dynamo_trail_bucket = s3.Bucket(self, 'DynamodbDataPlaneTrailBucket',
             removal_policy=RemovalPolicy.RETAIN,
-            auto_delete_objects=False,
+            auto_delete_objects=True,
             encryption=s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
             versioned=True,
@@ -584,35 +583,6 @@ class PortalStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
-        # VPC Endpoint for API Gateway
-        if len(api_gateway_vpc_endpoint_id) == 0:
-            apigw_endpoint = ec2.InterfaceVpcEndpoint(self,
-                "PiiRedactionApiGwInterfaceEndpoint",
-                vpc=vpc,
-                service=ec2.InterfaceVpcEndpointAwsService.APIGATEWAY,
-                subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-                security_groups=[lambda_auth_security_group],
-                private_dns_enabled=True
-            )
-
-            # Any API Gateway should flow through the VPC Endpoint
-            apigw_endpoint.add_to_policy(
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    actions=["execute-api:Invoke"],
-                    resources=[
-                        f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:*/*/*/*"
-                    ],
-                    principals=[iam.AnyPrincipal()]
-                )
-            )
-        else:
-            apigw_endpoint = ec2.InterfaceVpcEndpoint.from_interface_vpc_endpoint_attributes(self,
-                "PiiRedactionApiGwInterfaceEndpoint",
-                vpc_endpoint_id=api_gateway_vpc_endpoint_id,
-                port=443
-            )
-
         api = apigateway.RestApi(self, 'PiiRedactionInfraAPI',
             rest_api_name=stackPrefix(resource_prefix, "PiiRedactionInfraAPI"),
             description='API for PII Redaction using Amazon Bedrock portal',
@@ -640,26 +610,8 @@ class PortalStack(Stack):
             ),
             cloud_watch_role=True,
             cloud_watch_role_removal_policy=RemovalPolicy.DESTROY,
-            endpoint_configuration=apigateway.EndpointConfiguration(
-                types=[apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE],
-                vpc_endpoints=[apigw_endpoint]
-            ),
             policy=iam.PolicyDocument(
                 statements=[
-                    # Allow access only from specific VPC Endpoint
-                    iam.PolicyStatement(
-                        effect=iam.Effect.ALLOW,
-                        actions=['execute-api:Invoke'],
-                        resources=[
-                            f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:*/*/*/*"
-                        ],
-                        principals=[iam.AnyPrincipal()],
-                        conditions={
-                            'StringEquals': {
-                                'aws:sourceVpce': apigw_endpoint.vpc_endpoint_id
-                            }
-                        } if environment != 'local' else None
-                    ),
                     iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
                         actions=['lambda:InvokeFunction'],
@@ -691,17 +643,17 @@ class PortalStack(Stack):
             source_arn=f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:{api.rest_api_id}/*/*/*"
         )
 
-        # if len(api_domain_name) > 0:
-        #     # Set up custom domain for API Gateway
-        #     api_domain = apigateway.DomainName(self, 'ApiDomain',
-        #         domain_name=api_domain_name,
-        #         certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
-        #         security_policy=apigateway.SecurityPolicy.TLS_1_2,
-        #         mapping=api,
-        #         endpoint_type=apigateway.EndpointType.REGIONAL if environment == 'local' else apigateway.EndpointType.PRIVATE,
-        #     )
+        if len(api_domain_name) > 0:
+            # Set up custom domain for API Gateway
+            api_domain = apigateway.DomainName(self, 'ApiDomain',
+                domain_name=api_domain_name,
+                certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
+                security_policy=apigateway.SecurityPolicy.TLS_1_2,
+                mapping=api,
+                endpoint_type=apigateway.EndpointType.REGIONAL
+            )
 
-        #     api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
+            api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
 
         # API Gateway gateway response that initiates Basic Auth request
         if auth_type == 'basic':
@@ -821,13 +773,7 @@ class PortalStack(Stack):
             default_method_options=apigateway.MethodOptions(
                 authorizer=authorizer if auth_type == 'oidc' else None,
                 authorization_type=apigateway.AuthorizationType.CUSTOM if auth_type == 'oidc' else None
-            ),
-            default_cors_preflight_options={
-                'allow_origins': apigateway.Cors.ALL_ORIGINS,
-                'allow_methods': apigateway.Cors.ALL_METHODS,
-                'allow_headers': apigateway.Cors.DEFAULT_HEADERS,
-                'disable_cache': True
-            } if environment == 'local' else None,
+            )
         )
         messages = apiResources.add_resource('messages')
         messages.add_method('GET',  operation_name='getMessages')
@@ -959,6 +905,8 @@ class PortalStack(Stack):
             resource_arn=api.deployment_stage.stage_arn,
             web_acl_arn=waf.attr_arn
         )
+
+        self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
 
         # if len(api_domain_name) > 0:
         #     self.apigw_domain_name_alias = CfnOutput(self, "ApiGwDomainNameAliasOutput", value=api_domain.domain_name_alias_domain_name, export_name="ApiGwDomainNameAlias")

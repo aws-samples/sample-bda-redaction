@@ -15,7 +15,6 @@
     "oidc_issuer": "",
     "authorized_users": [],
     "auth_type": "basic",
-    "api_gateway_vpc_endpoint_id": "",
     "kms_cmk_arn": "",
     "api_domain_name": "",
     "api_domain_cert_arn": ""

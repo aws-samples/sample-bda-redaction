@@ -34,7 +34,6 @@ if context_values:
     oidc_issuer = context_values['resource_names'].get('oidc_issuer', 'oidc_issuer')
     authorized_users = context_values['resource_names'].get('authorized_users', 'authorized_users')
     auth_type = context_values['resource_names'].get('auth_type', 'auth_type')
-    api_gateway_vpc_endpoint_id = context_values['resource_names'].get('api_gateway_vpc_endpoint_id')
     kms_cmk_arn = context_values['resource_names'].get('kms_cmk_arn')
     api_domain_name = context_values['resource_names'].get('api_domain_name')
     api_domain_cert_arn = context_values['resource_names'].get('api_domain_cert_arn')
@@ -75,7 +74,6 @@ portal_stack = PortalStack(app, stackPrefix(resource_name_prefix, "PortalStack")
     auth_type=auth_type,
     secret_name=secret_name,
     auto_reply_from_email=auto_reply_from_email,
-    api_gateway_vpc_endpoint_id=api_gateway_vpc_endpoint_id,
     kms_cmk_arn=kms_cmk_arn,
     api_domain_name=api_domain_name,
     api_domain_cert_arn=api_domain_cert_arn
