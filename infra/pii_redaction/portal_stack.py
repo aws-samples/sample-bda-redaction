@@ -960,5 +960,7 @@ class PortalStack(Stack):
             web_acl_arn=waf.attr_arn
         )
 
+        self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
+
         # if len(api_domain_name) > 0:
         #     self.apigw_domain_name_alias = CfnOutput(self, "ApiGwDomainNameAliasOutput", value=api_domain.domain_name_alias_domain_name, export_name="ApiGwDomainNameAlias")
