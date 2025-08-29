@@ -225,7 +225,9 @@ A unique `<<case_id>>` is generated and used in the dynamodb inventory table for
 
 ## Portal
 
-**IMPORTANT:** The installation of the portal is completely optional. It is only required if you want a user interface to view the redacted emails. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
+**IMPORTANT:** The installation of the portal is completely optional. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
+
+The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to organize, view, and forward sanitized email content.
 
 ### Install Prerequisites
 
@@ -329,3 +331,22 @@ Use the API Gateway invoke URL from the API Gateway that was created during the 
 6. Enter that value in the address bar of your web browser.
 
 You should now see the portal's user interface visible within the web browser. If any emails have been processed they will be listed on the home page of the portal.
+
+#### Portal Use Cases
+
+##### Email Management
+- **List Messages**: View processed emails with redacted content
+- **Forward Messages**: Send redacted emails to other recipients (when SES is configured)
+- **Export Messages**: Export email data for external use
+- **Message Details**: View individual email content and attachments
+
+##### Folder Management
+- **Create Folders**: Organize emails into custom folders
+- **List Folders**: View and manage existing folder structure
+- **Delete Folders**: Remove folders when no longer needed
+
+##### Rules Engine
+- **Create Rules**: Define automated email categorization rules
+- **List Rules**: View existing email filtering rules
+- **Toggle Rules**: Enable/disable rules without deletion
+- **Delete Rules**: Remove rules permanently
