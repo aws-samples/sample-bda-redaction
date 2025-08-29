@@ -106,7 +106,7 @@ function ListFolders() {
             <RoutedButton
               buttonText="Create New Folder"
               variant="normal"
-              href="/folders/create"
+              href={`${import.meta.env.VITE_BASE}/folders/create`}
             />
             <ButtonDropdown
               variant="primary"

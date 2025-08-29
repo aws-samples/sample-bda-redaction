@@ -225,13 +225,13 @@ function ListMessages() {
                 <Box>
                   <Button iconName="refresh" onClick={() => messages.refetch()} />
                 </Box>
-                <RoutedButton variant="normal" buttonText="Add Folder" href="/folders/create" onClick={() => {
+                <RoutedButton variant="normal" buttonText="Add Folder" href={`${import.meta.env.VITE_BASE}/folders/create`} onClick={() => {
                   outletCtx.setActiveDrawer([]);
                   outletCtx.setActiveDrawerId("");
                 }} />
                 {
                    (import.meta.env.VITE_EMAIL_ENABLED === "true") &&
-                  <RoutedButton variant="normal" buttonText="Add Filtering Rule" href="/rules/create" onClick={() => {
+                  <RoutedButton variant="normal" buttonText="Add Filtering Rule" href={`${import.meta.env.VITE_BASE}/rules/create`} onClick={() => {
                     outletCtx.setActiveDrawer([]);
                     outletCtx.setActiveDrawerId("");
                   }} />

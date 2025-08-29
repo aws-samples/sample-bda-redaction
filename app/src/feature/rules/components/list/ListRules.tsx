@@ -123,7 +123,7 @@ function ListRules() {
             <RoutedButton
               buttonText="Create New Rule"
               variant="normal"
-              href="/rules/create"
+              href={`${import.meta.env.VITE_BASE}/rules/create`}
             />
             <ButtonDropdown
               variant="primary"
