@@ -115,8 +115,6 @@ Update the `context.json` file with the correct configuration options for the en
 | inventory_table_name | `""` | DynamoDB table name storing redacted message details | Created during CDK deployment |
 | resource_name_prefix | `""` | Prefix used when naming resources during the stack creation | During stack creation |
 | retention | `90` | Number of days for retention of the messages in the redacted and raw S3 buckets | During stack creation|
-| api_domain_name | `""` | API Gateway custom domain name that will be used to access the portal through a web browser (must be registered as a CNAME within an [Amazon Route 53](https://aws.amazon.com/route53/) hosted zone) | Needs to be created prior to execution | 
-| api_domain_cert_arn | `""` | ARN of ACM certificate to be used with the API Gateway custom domain name (required with usage of api_domain_name) | Needs to be created prior to execution |
 
 The following properties are only required when the portal is being provisioned.
 
@@ -269,14 +267,6 @@ JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deplo
 
 The first-time deployment should take approximately 10 minutes to complete.
 
-### Portal Access
-
-An API Gateway Custom Domain is required for deployment. You will use this domain name to access the portal in a web browser.
-
-To complete this process you will need to create a custom domain name. [Learn more about creating a private custom domain name](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-private-custom-domains-tutorial.html).
-
-In order to access the portal using this custom domain, configure the CNAME record that you have created in Amazon Route 53 by adding the **API Gateway domain name** from the AWS API Gateway Custom domain names screen as the value of that CNAME. The update to the DNS will take approximately 5 minutes (if the TTL is set to 300 seconds).
-
 ### Authentication
 
 The portal is protected by Basic Authentication. When using Basic Access Authentication the credentials are stored in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) using the secret provisioned in the `PortalStack` CloudFormation stack that was created via AWS CDK. The CloudFormation stack resource is named `PiiRedactionPortalAuthSecret`.
@@ -293,17 +283,14 @@ You can also create the file using your preferred text editor as well.
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
-| VITE_APIGW |None| URL of domain or subdomain that was used to create an API Gateway custom domain (described above) | Yes
-| VITE_EMAIL_ENABLED | false | Enables/disables the forward email function. Values are `true` to enable the feature or `false` to disable it | Yes
+| VITE_APIGW | `""` | Hostname from the API Gateway invoke URL without the path (remove `/portal` from the value) | Yes
+| VITE_BASE | `/portal` | Specifies the path used to request the static files needed to  render the portal | Yes
+| VITE_API_PATH | `/api` | Specifies the path needed to send requests to the API Gateway | Yes
+| VITE_EMAIL_ENABLED | `false` | Enables/disables the forward email function. Values are `true` to enable the feature or `false` to disable it | Yes
 
 ### Deployment
 
-Run all of the following commands from within a terminal/CLI environment.
-
-Change the value of `VITE_BASE` in the `.env` file to be an empty string:
-```sh
-VITE_BASE=""
-```
+Run all of the following commands from within a terminal/CLI environment:
 
 Navigate to the root of the `app` directory before running any of the following commands to build this application for production by running the following commands:
 
@@ -330,4 +317,15 @@ aws s3 sync dist/ s3://<<name-of-s3-bucket>> --delete
 
 This value is also output during the `cdk deploy` process when the PortalStack has been successfully completed.
 
-Once the files have been transferred successfully, you can view the portal using either the domain name that is configured to serve requests.
+### Portal Access
+
+Use the API Gateway invoke URL from the API Gateway that was created during the `cdk deploy` process to access the portal from a web browser. You can find this URL by following these steps:
+
+1. Navigate to the AWS Console
+2. Navigate to API Gateway and find the API Gateway that was created during the `cdk deploy` process. The name of the API Gateway can be found in the Resources section of the `<<resource-name-prefix>>-PortalStack` CloudFormation stack.
+3. Click on the **Stages** link in the left-hand menu.
+4. Ensure that the ** portal** stage is selected
+5. Find the **Invoke URL** and copy that value
+6. Enter that value in the address bar of your web browser.
+
+You should now see the portal's user interface visible within the web browser. If any emails have been processed they will be listed on the home page of the portal.

@@ -39,8 +39,6 @@ class PortalStack(Stack):
         environment: str,
         secret_name: str,
         auto_reply_from_email: str,
-        api_domain_name: str,
-        api_domain_cert_arn: str,
         **kwargs
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -502,18 +500,6 @@ class PortalStack(Stack):
             source_arn=f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:{api.rest_api_id}/*/*/*"
         )
 
-        if len(api_domain_name) > 0:
-            # Set up custom domain for API Gateway
-            api_domain = apigateway.DomainName(self, 'ApiDomain',
-                domain_name=api_domain_name,
-                certificate=acm.Certificate.from_certificate_arn(self, 'Certificate', certificate_arn=api_domain_cert_arn),
-                security_policy=apigateway.SecurityPolicy.TLS_1_2,
-                mapping=api,
-                endpoint_type=apigateway.EndpointType.REGIONAL
-            )
-
-            api_domain.apply_removal_policy(RemovalPolicy.DESTROY)
-
         # API Gateway gateway response that initiates Basic Auth request
         apigateway.GatewayResponse(self, 'GatewayResponse',
             rest_api=api,
@@ -707,4 +693,3 @@ class PortalStack(Stack):
         )
 
         self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
-        self.apigw_domain_name_alias = CfnOutput(self, "ApiGwDomainNameAliasOutput", value=api_domain.domain_name_alias_domain_name, export_name="ApiGwDomainNameAlias")

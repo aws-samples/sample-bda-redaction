@@ -9,8 +9,6 @@
     "secret_name": "",
     "auto_reply_from_email": "",
     "domain": "",
-    "environment": "development",
-    "api_domain_name": "",
-    "api_domain_cert_arn": ""
+    "environment": "development"
   }
 }

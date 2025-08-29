@@ -29,8 +29,6 @@ if context_values:
     resource_name_prefix = context_values['resource_names'].get('resource_name_prefix', 'ResourceNamePrefix')
     domain = context_values['resource_names'].get('domain', 'domain')
     environment = context_values['resource_names'].get('environment', 'environment')
-    api_domain_name = context_values['resource_names'].get('api_domain_name')
-    api_domain_cert_arn = context_values['resource_names'].get('api_domain_cert_arn')
 else:
     print("No context values found. Please provide the same")
     exit(1)  # Exit with an error code
@@ -61,8 +59,6 @@ portal_stack = PortalStack(app, stackPrefix(resource_name_prefix, "PortalStack")
     environment=environment,
     secret_name=secret_name,
     auto_reply_from_email=auto_reply_from_email,
-    api_domain_name=api_domain_name,
-    api_domain_cert_arn=api_domain_cert_arn
 )
 
 # Add dependency between the stacks
