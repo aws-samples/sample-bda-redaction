@@ -7,12 +7,12 @@ __pycache__
 node_modules
 context.json
 requirements-dev.txt
-pii_redaction/lambda/lambda-layer/*.zip
+#pii_redaction/lambda/lambda-layer/*.zip
 pii_redaction/lambda/lambda-layer/python
 pii_redaction/lambda/attachmentProcessing/lambda-layer/python
-pii_redaction/lambda/attachmentProcessing/lambda-layer/layer_content.zip
+#pii_redaction/lambda/attachmentProcessing/lambda-layer/layer_content.zip
 pii_redaction/lambda/emailProcessing/lambda-layer/python
-pii_redaction/lambda/emailProcessing/lambda-layer/layer_content.zip
+#pii_redaction/lambda/emailProcessing/lambda-layer/layer_content.zip
 
 # CDK asset staging directory
 .cdk.staging
