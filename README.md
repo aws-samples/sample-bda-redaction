@@ -25,7 +25,7 @@ The diagram illustrates the backend PII detection and redaction workflow and the
 ### Install Prerequisites
 
 This application requires the installation of the following software tools:
-* [Python v3.7 or higher](https://www.python.org/downloads/)
+* [Python v3.12 or higher](https://www.python.org/downloads/)
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 * [AWS CDK v2.166 or higher](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
@@ -130,7 +130,7 @@ Use cases that require the usage of AWS SES to manage redacted email messages wi
 | auto_reply_from_email | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
 | secret_name | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | |
 
-#### Update Lambda Layer that contains additional PyPI packages
+#### Update Lambda Layer that contains additional PyPI packages (**optional - existing lambda layer file in the repo can be used, only to be update if using python version other than 3.12)
 
 Build the lambda layers
 
