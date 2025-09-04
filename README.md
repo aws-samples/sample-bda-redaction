@@ -193,9 +193,9 @@ For convenience a sample email is available in **"infra/pii_redaction/sample_ema
 aws s3 cp pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domain_emails/
 ```
 
-Above will trigger the redaction of email process. You can track the progress in the dynamodb table `<<inventory_table_name>>`. A unique `<<case_id>>` is generated and used in dynamodb inventory table for each email being processed. 
+The above will trigger the redaction of email process. You can track the progress in the DynamoDB table `<<inventory_table_name>>`. A unique `<<case_id>>` is generated and used in DynamoDB inventory table for each email being processed. 
 
-Inventory table name can be found on the resources tab in the AWS Cloudformation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID `EmailInventoryTable`. 
+Inventory table name can be found on the resources tab in the AWS CloudFormation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID `EmailInventoryTable`. 
 
 Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
 
