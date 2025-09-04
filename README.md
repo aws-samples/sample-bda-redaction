@@ -292,7 +292,7 @@ Use the API Gateway invoke URL from the API Gateway that has been created during
 3. Click on the **Stages** link in the left-hand menu.
 4. Ensure that the ** portal** stage is selected
 5. Find the **Invoke URL** and copy that value
-6. Enter that value in the address bar of your web browser.
+6. Enter that value in the address bar of your web browser
 
 You should now see the portal's user interface visible within the web browser. If any emails have been processed, they will be listed on the home page of the portal.
 
@@ -316,7 +316,7 @@ You should now see the portal's user interface visible within the web browser. I
 - **Delete Rules**: Remove rules permanently
 
 ### Troubleshooting
-#### Deployment
+#### Deployment Issues
 Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
 * [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
 
