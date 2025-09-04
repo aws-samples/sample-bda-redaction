@@ -347,3 +347,33 @@ You should now see the portal's user interface visible within the web browser. I
 - **List Rules**: View existing email filtering rules
 - **Toggle Rules**: Enable/disable rules without deletion
 - **Delete Rules**: Remove rules permanently
+
+## Clean up
+
+To avoid incurring future charges, follow these steps to remove the resources created by this solution:
+1.	Delete the contents of the [S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/delete-bucket.html) buckets created by the solution:
+- Raw email bucket
+- Redacted email bucket
+- Portal static assets bucket (if portal was deployed)
+2.	Remove the CloudFormation stacks in the following order:
+(if deployed)
+```sh
+cdk destroy <<resource_name_prefix>>-PortalStack 
+```
+```sh
+cdk destroy <<resource_name_prefix>>-ConsumerStack
+```
+```sh
+cdk destroy <<resource_name_prefix>>-S3Stack
+```
+3.	If you have configured Amazon SES:
+- [Remove the verified domain/email identities](https://docs.aws.amazon.com/ses/latest/dg/remove-verified-domain.html)
+- Delete the MX records from your DNS provider
+- Delete the SMTP credentials from [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_delete-secret.html)
+4.	If you have configured the Portal with a custom domain:
+- Remove the [API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html) custom domain name
+- [Delete any associated ACM certificates](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-delete.html)
+- Remove any DNS CNAME records
+5.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
+
+Note: The VPC and its associated resources as prerequisites for this solution may not be deleted if they may be used by other applications.
