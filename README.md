@@ -129,7 +129,7 @@ Use cases that require the usage of AWS SES to manage redacted email messages wi
 
 | Property Name | Description | Comment |
 | ------ | -------- | ---------|
-| domain | The domain name that is used for AWS SES | This can be left blank if not setting up Amazon SES
+| domain | The verified domain or email name that is used for AWS SES | This can be left blank if not setting up Amazon SES
 | auto_reply_from_email | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
 | secret_name | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | |
 
