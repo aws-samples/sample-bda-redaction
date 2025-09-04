@@ -24,9 +24,7 @@ The diagram illustrates the backend PII detection and redaction workflow and the
 13.	[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) provide visibility into the PII detection and redaction process, while [Amazon Simple Notification Service](https://aws.amazon.com/sns/) delivers real-time alerts for any failures, ensuring immediate attention to issues.
 
 ## Infrastructure
-
 ### Install Prerequisites
-
 This application requires the installation of the following software tools:
 * [Python v3.12 or higher](https://www.python.org/downloads/)
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
@@ -40,7 +38,6 @@ All CloudFormation stacks need to be deployed within the same AWS account.
 An existing [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/create-vpc.html) that contains 3 private subnets with no internet access is needed.
 
 ### CloudFormation Stacks
-
 The solution contains 3 stacks (2 required, 1 optional) that will be deployed in your AWS account:
 * **S3Stack** - Provisions the core infrastructure including S3 buckets for raw and redacted email storage with automatic lifecycle policies, a DynamoDB table for email metadata tracking with time-to-live (TTL) and global secondary indexes, and VPC security groups for secure Lambda function access. It also creates IAM roles with comprehensive permissions for S3, DynamoDB, and Bedrock services, forming the secure foundation for the entire PII detection and redaction workflow.
 
@@ -49,9 +46,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 * **PortalStack (optional)** - Provisions the optional web interface including a regional API Gateway with Lambda authorizer for Basic Auth, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
 
 ### Amazon SES (optional)
-
 **Move directly to the Deployment section below if you are not using Amazon SES**
-
 Below Amazon SES Setup is optional. One can test the code without this setup as well. Steps to test the application with or without Amazon SES is covered in **Testing** section.
 
 Set up Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
@@ -68,7 +63,6 @@ Key for the user name in the secret should be `smtp_username` and key for passwo
 * [Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
 
 ### Deployment
-
 Run all of the following commands from within a terminal/CLI environment.
 
 Clone the repository
@@ -135,7 +129,6 @@ Use cases that require the usage of Amazon SES to manage redacted email messages
 
 
 #### Deploy Infrastructure
-
 Run the following commands from the root of the `infra` directory:
 
 Bootstrap the AWS account to use AWS CDK
@@ -155,7 +148,6 @@ JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deplo
 ```
 
 ### Troubleshooting
-
 #### Deployment
 Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
 * [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
@@ -178,8 +170,26 @@ Deployment failures will always rollback the current deployment and return the C
 In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
 
 ### Testing
-#### Testing the application without Amazon SES
+#### Testing the application with Amazon SES
+Before starting the test make sure Amazon SES Email Receiving rule set created by the `<<resource_name_prefix>>-ConsumerStack` stack is active. We can check by executing below command and make sure name in the output is `<<resource_name_prefix>>-rule-set`
 
+```sh
+aws ses describe-active-receipt-rule-set
+```
+If the name does not match, execute below to activate the same:
+
+```sh
+# Replace <<resource_name_prefix>> with resource_name_prefix used in context.json
+
+aws ses set-active-receipt-rule-set --rule-set-name <<resource_name_prefix>>-rule-set
+```
+
+Once we have the correct rule set active, to test the application using Amazon SES, you just need to send email to the verified email or domain in Amazon SES, which will automatically trigger the redaction pipeline. 
+
+You can track the progress in the DynamoDB table `<<inventory_table_name>>`. Inventory table name can be found on the resources tab in the AWS CloudFormation Console for the `<<resource_name_prefix>>-S3Stack` stack and Logical ID `EmailInventoryTable`. 
+
+A unique `<<case_id>>` is generated and used in the DynamoDB inventory table for each email being processed. Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
+#### Testing the application without Amazon SES
 As described earlier the solution is used to redact any PII data in email body and attachments so to test the application we need to provide an email file which needs to be redacted. 
 
 We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. Raw bucket name can be found on the output tab in the AWS CloudFormation Console for <<resource_name_prefix>>-S3Stack stack and Export Name `RawBucket`. 
@@ -198,27 +208,6 @@ The above will trigger the redaction of email process. You can track the progres
 Inventory table name can be found on the resources tab in the AWS CloudFormation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID `EmailInventoryTable`. 
 
 Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
-
-#### Testing the application with Amazon SES
-
-Before starting the test make sure Amazon SES Email Receiving rule set created by the `<<resource_name_prefix>>-ConsumerStack` stack is active. We can check by executing below command and make sure name in the output is `<<resource_name_prefix>>-rule-set`
-
-```sh
-aws ses describe-active-receipt-rule-set
-```
-If the name does not match execute below to activate the same
-
-```sh
-# Replace <<resource_name_prefix>> with resource_name_prefix used in context.json
-
-aws ses set-active-receipt-rule-set --rule-set-name <<resource_name_prefix>>-rule-set
-```
-
-Once we have the correct rule set active; to test the application using Amazon SES we just need to send email to the verified email or domain in Amazon SES and it will automatically trigger the redaction pipeline. 
-
-You can track the progress in the dynamodb table `<<inventory_table_name>>`. Inventory table name can be found on the resources tab in the AWS CloudFormation Console for the `<<resource_name_prefix>>-S3Stack` stack and Logical ID `EmailInventoryTable`. 
-
-A unique `<<case_id>>` is generated and used in the dynamodb inventory table for each email being processed. Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
 
 ## Portal
 
