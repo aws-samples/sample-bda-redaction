@@ -256,9 +256,9 @@ You can also create the file using your preferred text editor as well.
 
 ### Portal Deployment
 
-Run all of the following commands from within a terminal/CLI environment:
+Run the following commands from within a terminal/CLI environment:
 
-Navigate to the root of the `app` directory before running any of the following commands to build this application for production by running the following commands:
+Before running any of the following commands, navigate to the root of the `app` directory to build this application for production by running the following commands:
 
 Install NPM packages
 
