@@ -187,28 +187,6 @@ Inventory table name can be found on the resources tab in the AWS CloudFormation
 
 Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
 
-### Troubleshooting
-#### Deployment
-Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
-* [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
-
-Once deployment issues have been resolved, redeploy the stack using the following commands:
-
-```sh
-JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
-```
-
-```sh
-# Replace <<resource_name_prefix>> with its chosen value:
-
-JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
-```
-
-#### Rollback Procedures
-Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
-
-In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
-
 ## Portal
 
 **IMPORTANT:** The installation of the portal is completely optional. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
@@ -336,6 +314,28 @@ You should now see the portal's user interface visible within the web browser. I
 - **List Rules**: View existing email filtering rules
 - **Toggle Rules**: Enable/disable rules without deletion
 - **Delete Rules**: Remove rules permanently
+
+### Troubleshooting
+#### Deployment
+Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
+* [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
+
+Once deployment issues have been resolved, redeploy the stack using the following commands:
+
+```sh
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
+```
+
+```sh
+# Replace <<resource_name_prefix>> with its chosen value:
+
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
+```
+
+#### Rollback Procedures
+Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
+
+In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
 
 ## Clean up
 
