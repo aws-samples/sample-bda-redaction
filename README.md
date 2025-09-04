@@ -224,13 +224,13 @@ This application requires the installation of the following software tools:
 
 ### Infrastructure Deployment
 
-Synthesize the CloudFormation template for this code by navigating to the directory root of the solution. Then run the following commands:
+Synthesize the CloudFormation template for this code by navigating to the directory root of the solution. Then run the following command:
 
 ```sh
 cd sample-bda-redaction/infra/
 ```
 
-**Optional:** Create and activate a new Python virutal environment (if the virtual environment has not been created previously):
+**Optional:** Create and activate a new Python virtual environment (if the virtual environment has not been created previously):
 
 ```sh
 python3 -m venv .venv
@@ -241,7 +241,7 @@ python3 -m venv .venv
 pip install -r requirements.txt
 ```
 
-At this point you can now synthesize the CloudFormation template for this code. 
+At this point you can synthesize the CloudFormation template for this code. 
 
 ```sh
 JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
