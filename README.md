@@ -1,5 +1,8 @@
 # Multimodal PII Redaction Using Amazon Bedrock
 
+## About
+This repository contains a solution for Multimodal PII (Personally Identifiable Information) Redaction using Amazon Bedrock. The solution provides a workflow for detecting and redacting PII from emails and attachments using various AWS services including Amazon Bedrock Data Automation, Amazon Bedrock Guardrails, Lambda, S3, DynamoDB, and more.
+
 ## Solution Architecture 
 The following diagram outlines the solution architecture. 
 
