@@ -125,11 +125,11 @@ The following properties are only required when the portal is being provisioned.
 | ------ | ---- | -------- | 
 | environment | `development` | The type of environment where resources will be provisioned. Values are `development` or `production` |
 
-Use cases that require the usage of AWS SES to manage redacted email messages will need to set the following configuration variables. Otherwise, they are optional.
+Use cases that require the usage of Amazon SES to manage redacted email messages will need to set the following configuration variables. Otherwise, these are optional.
 
 | Property Name | Description | Comment |
 | ------ | -------- | ---------|
-| domain | The verified domain or email name that is used for AWS SES | This can be left blank if not setting up Amazon SES
+| domain | The verified domain or email name that is used for Amazon SES | This can be left blank if not setting up Amazon SES
 | auto_reply_from_email | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
 | secret_name | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | |
 
