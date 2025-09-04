@@ -59,11 +59,11 @@ Set up Amazon SES with prod access and verify the domain/email identities for wh
 * [Request SES Production Access](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
 * [Setting up Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html)
 
-Create credentials for SMTP and save it in secrets manager secret with name `SmtpCredentials`. **Please note that an IAM user is created for this process**
+Create credentials for SMTP and save it in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) secret with name `SmtpCredentials`. **Please note that an IAM user is created for this process**
 
 If using any other name for secret update the `context.json` line `secret_name` with the name of the secret created.
 
-Key for the user name in the secret should be `smtp_username` and key for password should be `smtp_password` when storing the same in secrets manager
+Key for the user name in the secret should be `smtp_username` and key for password should be `smtp_password` when storing the same in AWS Secrets Manager
 
 * [Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
 
