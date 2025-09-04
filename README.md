@@ -272,9 +272,9 @@ You can also create the file using your preferred text editor as well.
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
 | VITE_APIGW | `""` | Hostname from the API Gateway invoke URL without the path (remove `/portal` from the value) | Yes
-| VITE_BASE | `/portal` | Specifies the path used to request the static files needed to  render the portal | Yes
-| VITE_API_PATH | `/api` | Specifies the path needed to send requests to the API Gateway | Yes
-| VITE_EMAIL_ENABLED | `false` | Enables/disables the forward email function. Values are `true` to enable the feature or `false` to disable it. Should be set to `false` if you have not set up Amazon SES | Yes
+| VITE_BASE | `/portal` | It specifies the path used to request the static files needed to  render the portal | Yes
+| VITE_API_PATH | `/api` | It specifies the path needed to send requests to the API Gateway | Yes
+| VITE_EMAIL_ENABLED | `false` | It enables/disables the forward email function. Values are `true` to enable the feature or `false` to disable it. It should be set to `false` if you have not set up Amazon SES | Yes
 
 ### Deployment
 
