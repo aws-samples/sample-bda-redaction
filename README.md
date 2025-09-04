@@ -235,7 +235,7 @@ The first-time deployment should take approximately 10 minutes to complete.
 
 ### Authentication
 
-The portal is protected by Basic Authentication. When using Basic Access Authentication the credentials are stored in AWS Secrets Manager using the secret provisioned in the `PortalStack` CloudFormation stack that was created via AWS CDK. The CloudFormation stack resource is named `PiiRedactionPortalAuthSecret`.
+The portal is protected by Basic Authentication. When using Basic Access Authentication the credentials are stored in AWS Secrets Manager using the secret provisioned in the `PortalStack` CloudFormation stack that has been created via AWS CDK. The CloudFormation stack resource is named `PiiRedactionPortalAuthSecret`.
 
 ### Environment Variables
 
@@ -285,16 +285,16 @@ This value is also output during the `cdk deploy` process when the PortalStack h
 
 ### Portal Access
 
-Use the API Gateway invoke URL from the API Gateway that was created during the `cdk deploy` process to access the portal from a web browser. You can find this URL by following these steps:
+Use the API Gateway invoke URL from the API Gateway that has been created during the `cdk deploy` process to access the portal from a web browser. You can find this URL by following these steps:
 
 1. Navigate to the AWS Console
-2. Navigate to API Gateway and find the API Gateway that was created during the `cdk deploy` process. The name of the API Gateway can be found in the Resources section of the `<<resource-name-prefix>>-PortalStack` CloudFormation stack.
+2. Navigate to API Gateway and find the API Gateway that has been created during the `cdk deploy` process. The name of the API Gateway can be found in the Resources section of the `<<resource-name-prefix>>-PortalStack` CloudFormation stack.
 3. Click on the **Stages** link in the left-hand menu.
 4. Ensure that the ** portal** stage is selected
 5. Find the **Invoke URL** and copy that value
 6. Enter that value in the address bar of your web browser.
 
-You should now see the portal's user interface visible within the web browser. If any emails have been processed they will be listed on the home page of the portal.
+You should now see the portal's user interface visible within the web browser. If any emails have been processed, they will be listed on the home page of the portal.
 
 #### Portal Use Cases
 
