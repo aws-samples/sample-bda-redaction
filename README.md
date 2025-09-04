@@ -133,14 +133,6 @@ Use cases that require the usage of AWS SES to manage redacted email messages wi
 | auto_reply_from_email | Email address of the "from" field of the email message. Also used as the email address where emails are forwarded from the Portal application | This can be left blank if not setting up the Portal
 | secret_name | AWS Secrets Manager secret containing SMTP credentials for forward email functionality from the portal | |
 
-#### Update Lambda Layer that contains additional PyPI packages (**optional - existing lambda layer file in the repo can be used, only to be update if using python version other than 3.12)
-
-Build the lambda layers
-
-```sh
-chmod +x setup_layers.sh
-./setup_layers.sh
-```
 
 #### Deploy Infrastructure
 
@@ -162,7 +154,7 @@ Replace ```<<resource_name_prefix>>``` with its chosen value and then run:
 JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
 ```
 
-### Validation
+### Troubleshooting
 
 #### Deployment
 Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
@@ -185,6 +177,7 @@ Deployment failures will always rollback the current deployment and return the C
 
 In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
 
+### Testing
 #### Testing the application without Amazon SES
 
 As described earlier the solution is used to redact any PII data in email body and attachements so to test the application we need to provide an email file which needs to be redacted. 
@@ -196,7 +189,7 @@ For conviniece a sample email is available in **"infra/pii_redaction/sample_emai
 ```sh
 # Replace <<raw_bucket>> with raw bucket name created during deployment:
 
-aws s3 cp infra/pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domain_emails/
+aws s3 cp pii_redaction/sample_email/ccvod0ot9mu6s67t0ce81f8m2fp5d2722a7hq8o1 s3://<<raw_bucket>>/domain_emails/
 ```
 
 Above will trigger the redaction of email process. You can track the progress in the dynamodb table `<<inventory_table_name>>`. A unique `<<case_id>>` is generated and used in dynamodb inventory table for each email being processed. 
