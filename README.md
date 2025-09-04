@@ -46,7 +46,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 * **PortalStack (optional)** - Provisions the optional web interface including a regional API Gateway with Lambda authorizer for Basic Auth, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
 
 ### Amazon SES (optional)
-**Move directly to the Deployment section below if you are not using Amazon SES**
+**Move directly to the Solution Deployment section below if you are not using Amazon SES**
 Below Amazon SES Setup is optional. One can test the code without this setup as well. Steps to test the application with or without Amazon SES is covered in **Testing** section.
 
 Set up Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
@@ -62,7 +62,7 @@ Key for the user name in the secret should be `smtp_username` and key for passwo
 
 * [Obtaining Amazon SES SMTP credentials](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html)
 
-### Deployment
+### Solution Deployment
 Run all of the following commands from within a terminal/CLI environment.
 
 Clone the repository
@@ -147,28 +147,6 @@ Replace ```<<resource_name_prefix>>``` with its chosen value and then run:
 JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
 ```
 
-### Troubleshooting
-#### Deployment
-Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
-* [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
-
-Once deployment issues have been resolved, redeploy the stack using the following commands:
-
-```sh
-JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
-```
-
-```sh
-# Replace <<resource_name_prefix>> with its chosen value:
-
-JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
-```
-
-#### Rollback Procedures
-Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
-
-In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
-
 ### Testing
 #### Testing the application with Amazon SES
 Before starting the test make sure Amazon SES Email Receiving rule set created by the `<<resource_name_prefix>>-ConsumerStack` stack is active. We can check by executing below command and make sure name in the output is `<<resource_name_prefix>>-rule-set`
@@ -208,6 +186,28 @@ The above will trigger the redaction of email process. You can track the progres
 Inventory table name can be found on the resources tab in the AWS CloudFormation Console for <<resource_name_prefix>>-S3Stack stack and Logical ID `EmailInventoryTable`. 
 
 Once redaction is completed you can find the redacted email body in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/email_body/` and redacted attachments in `<<redacted_bucket_name>>/redacted/<<today_date>>/<<case_id>>/attachments/`
+
+### Troubleshooting
+#### Deployment
+Running the CDK deployment through a Terminal/CLI environment will notify the user if there is a deployment failure through `stderr` in the Terminal/CLI environment. 
+* [Troubleshoot CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html) when encountering issues when you create, update, or delete CloudFormation stacks.
+
+Once deployment issues have been resolved, redeploy the stack using the following commands:
+
+```sh
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk synth --no-notices
+```
+
+```sh
+# Replace <<resource_name_prefix>> with its chosen value:
+
+JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deploy <<resource_name_prefix>>-S3Stack <<resource_name_prefix>>-ConsumerStack --no-notices
+```
+
+#### Rollback Procedures
+Deployment failures will always rollback the current deployment and return the CloudFormation stack(s) to their previous revision without an impact to current operations, configuration and existing resources. The exact error will be displayed in the CLI output and also in the CloudFormation stack events tab.
+
+In the event of a rollback failure, [find solutions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html) to handle the failures.
 
 ## Portal
 
@@ -276,7 +276,7 @@ You can also create the file using your preferred text editor as well.
 | VITE_API_PATH | `/api` | It specifies the path needed to send requests to the API Gateway | Yes
 | VITE_EMAIL_ENABLED | `false` | It enables/disables the forward email function. Values are `true` to enable the feature or `false` to disable it. It should be set to `false` if you have not set up Amazon SES | Yes
 
-### Deployment
+### Portal Deployment
 
 Run all of the following commands from within a terminal/CLI environment:
 
