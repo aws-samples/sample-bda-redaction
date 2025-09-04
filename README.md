@@ -257,7 +257,7 @@ The first-time deployment should take approximately 10 minutes to complete.
 
 ### Authentication
 
-The portal is protected by Basic Authentication. When using Basic Access Authentication the credentials are stored in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) using the secret provisioned in the `PortalStack` CloudFormation stack that was created via AWS CDK. The CloudFormation stack resource is named `PiiRedactionPortalAuthSecret`.
+The portal is protected by Basic Authentication. When using Basic Access Authentication the credentials are stored in AWS Secrets Manager using the secret provisioned in the `PortalStack` CloudFormation stack that was created via AWS CDK. The CloudFormation stack resource is named `PiiRedactionPortalAuthSecret`.
 
 ### Environment Variables
 
