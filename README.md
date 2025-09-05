@@ -77,7 +77,7 @@ The `infra/cdk.json` file tells the CDK Toolkit how to execute your app.
 cd sample-bda-redaction/infra/
 ```
 
-**Optional:** Create and activate a new Python virutal environment (make sure you are using python 3.12 as lambda is in CDK is configured for same. If using some other python version update CDK code to reflect the same in lambda runtime)
+**Optional:** Create and activate a new Python virtual environment (make sure you are using python 3.12 as lambda is in CDK is configured for same. If using some other python version update CDK code to reflect the same in lambda runtime)
 
 ```sh
 python3 -m venv .venv
@@ -154,7 +154,7 @@ Before starting the test make sure Amazon SES Email Receiving rule set created b
 ```sh
 aws ses describe-active-receipt-rule-set
 ```
-If the name does not match, execute below to activate the same:
+If the name does not match or the output is blank, execute below to activate the same:
 
 ```sh
 # Replace <<resource_name_prefix>> with resource_name_prefix used in context.json
@@ -344,7 +344,17 @@ To avoid incurring future charges, follow these steps to remove the resources cr
 - Raw email bucket
 - Redacted email bucket
 - Portal static assets bucket (if portal was deployed)
-2.	Remove the CloudFormation stacks in the following order:
+2.  Delete or disable the Amazon SES rule step created by the solution using below cli command:
+  ```sh
+  #to disable the rule set use below command
+  aws ses set-active-receipt-rule-set
+  ```
+  ```sh
+  #to delete the rule set use below command
+  # Replace <<resource_name_prefix>> with resource_name_prefix used in context.json
+  aws ses delete-receipt-rule-set --rule-set-name <resource_name_prefix>>-rule-set
+  ```
+3.	Remove the CloudFormation stacks in the following order:
 (if deployed)
 ```sh
 cdk destroy <<resource_name_prefix>>-PortalStack 
@@ -355,14 +365,14 @@ cdk destroy <<resource_name_prefix>>-ConsumerStack
 ```sh
 cdk destroy <<resource_name_prefix>>-S3Stack
 ```
-3.	If you have configured Amazon SES:
+4.	If you have configured Amazon SES:
 - [Remove the verified domain/email identities](https://docs.aws.amazon.com/ses/latest/dg/remove-verified-domain.html)
 - Delete the MX records from your DNS provider
 - Delete the SMTP credentials from [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_delete-secret.html)
-4.	If you have configured the Portal with a custom domain:
+5.	If you have configured the Portal with a custom domain:
 - Remove the [API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html) custom domain name
 - [Delete any associated ACM certificates](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-delete.html)
 - Remove any DNS CNAME records
-5.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
+6.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
 
 Note: The VPC and its associated resources as prerequisites for this solution may not be deleted if they may be used by other applications.
