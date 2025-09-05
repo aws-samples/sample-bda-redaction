@@ -18,7 +18,7 @@ The diagram illustrates the backend PII detection and redaction workflow and the
 7.	DynamoDB tables are updated with email messages, folders metadata, and email filtering rules. 
 8.	An Amazon EventBridge Scheduler is used to run the Rules Engine Lambda on a schedule which will process new emails that have yet to be categorized into folders based on enabled email filtering rules criteria. 
 9.	The Rules Engine Lambda also communicates with DynamoDB to access the messages table and the rules table.
-10.	Users access the application user interface with Basic Authentication and [Amazon API Gateway](https://aws.amazon.com/api-gateway/) manages user API requests.
+10.	Users can access the application user interface where [Amazon API Gateway](https://aws.amazon.com/api-gateway/) manages user API requests and routes requests to render the user interface through S3 static hosting.
 11.	A Portal API Lambda fetches the case details based on user requests.
 12.	The static assets served by API Gateway are stored in a private S3 bucket.
 13.	[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) provide visibility into the PII detection and redaction process, while [Amazon Simple Notification Service](https://aws.amazon.com/sns/) delivers real-time alerts for any failures, ensuring immediate attention to issues.
@@ -46,7 +46,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 
 * **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured, Lambda layers for dependency management, and S3 event notifications to trigger the email processing workflow automatically.
 
-* **PortalStack (optional)** - Provisions the optional web interface including a regional API Gateway with Lambda authorizer for Basic Auth, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
+* **PortalStack (optional)** - Provisions the optional web interface including a regional API Gateway, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
 
 ### Amazon SES (optional)
 
@@ -226,6 +226,25 @@ A unique `<<case_id>>` is generated and used in the dynamodb inventory table for
 
 The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to organize, view, and forward sanitized email content.
 
+### Portal Use Cases
+
+#### Email Management
+- **List Messages**: View processed emails with redacted content
+- **Forward Messages**: Send redacted emails to other recipients (when SES is configured)
+- **Export Messages**: Export email data for external use
+- **Message Details**: View individual email content and attachments
+
+#### Folder Management
+- **Create Folders**: Organize emails into custom folders
+- **List Folders**: View and manage existing folder structure
+- **Delete Folders**: Remove folders when no longer needed
+
+#### Rules Engine
+- **Create Rules**: Define automated email categorization rules
+- **List Rules**: View existing email filtering rules
+- **Toggle Rules**: Enable/disable rules without deletion
+- **Delete Rules**: Remove rules permanently
+
 ### Install Prerequisites
 
 This application requires the installation of the following software tools:
@@ -266,10 +285,6 @@ JSII_DEPRECATED=quiet JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION=quiet cdk deplo
 
 The first-time deployment should take approximately 10 minutes to complete.
 
-### Authentication
-
-The portal is protected by Basic Authentication. When using Basic Access Authentication the credentials are stored in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) using the secret provisioned in the `PortalStack` CloudFormation stack that was created via AWS CDK. The CloudFormation stack resource is named `PiiRedactionPortalAuthSecret`.
-
 ### Environment Variables
 
 Create a new environment file by navigating to the root of the `app` directory and update the following variables in the `.env` file (by copying the `.env.example` file to `.env`) using the following command to create the `.env` file using a terminal/CLI environment:
@@ -293,7 +308,7 @@ Run all of the following commands from within a terminal/CLI environment:
 
 Navigate to the root of the `app` directory before running any of the following commands to build this application for production by running the following commands:
 
-Install NPM packages
+Install NPM packages (first time only)
 
 ```sh
 npm install
@@ -329,25 +344,6 @@ Use the API Gateway invoke URL from the API Gateway that was created during the 
 
 You should now see the portal's user interface visible within the web browser. If any emails have been processed they will be listed on the home page of the portal.
 
-#### Portal Use Cases
-
-##### Email Management
-- **List Messages**: View processed emails with redacted content
-- **Forward Messages**: Send redacted emails to other recipients (when SES is configured)
-- **Export Messages**: Export email data for external use
-- **Message Details**: View individual email content and attachments
-
-##### Folder Management
-- **Create Folders**: Organize emails into custom folders
-- **List Folders**: View and manage existing folder structure
-- **Delete Folders**: Remove folders when no longer needed
-
-##### Rules Engine
-- **Create Rules**: Define automated email categorization rules
-- **List Rules**: View existing email filtering rules
-- **Toggle Rules**: Enable/disable rules without deletion
-- **Delete Rules**: Remove rules permanently
-
 ## Clean up
 
 To avoid incurring future charges, follow these steps to remove the resources created by this solution:
@@ -370,10 +366,6 @@ cdk destroy <<resource_name_prefix>>-S3Stack
 - [Remove the verified domain/email identities](https://docs.aws.amazon.com/ses/latest/dg/remove-verified-domain.html)
 - Delete the MX records from your DNS provider
 - Delete the SMTP credentials from [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_delete-secret.html)
-4.	If you have configured the Portal with a custom domain:
-- Remove the [API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html) custom domain name
-- [Delete any associated ACM certificates](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-delete.html)
-- Remove any DNS CNAME records
-5.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
+4.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
 
 Note: The VPC and its associated resources as prerequisites for this solution may not be deleted if they may be used by other applications.

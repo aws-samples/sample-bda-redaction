@@ -20,8 +20,6 @@ from aws_cdk import (
     aws_scheduler_targets_alpha as targets,
     aws_s3 as s3,
     aws_ec2 as ec2,
-    aws_secretsmanager as secretsmanager,
-    aws_certificatemanager as acm,
     custom_resources as cr
 )
 from constructs import Construct
@@ -108,16 +106,6 @@ class PortalStack(Stack):
                 type=dynamodb.AttributeType.STRING
             ),
             projection_type=dynamodb.ProjectionType.ALL
-        )
-
-        # Create new DynamoDB table for users
-        users_tbl = dynamodb.TableV2(self, 'UsersTable', 
-            table_name=stackPrefix(resource_prefix, "UsersTable"),
-            table_class=dynamodb.TableClass.STANDARD,
-            partition_key=dynamodb.Attribute(name='ID', type=dynamodb.AttributeType.STRING),
-            removal_policy=RemovalPolicy.DESTROY,
-            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
-                    point_in_time_recovery_enabled=True)
         )
 
         # Initialize folders table with default folder
@@ -323,58 +311,6 @@ class PortalStack(Stack):
                 log_group=logs.LogGroup(self, 'piiRedactionemailForwardingLambdaLogGroup'),
             )
 
-        # Lambda function that is the authorizer for the API Gateway
-        lambda_auth_security_group = ec2.SecurityGroup(self, "LambdaAuthSecurityGroup",
-            security_group_name=stackPrefix(resource_prefix, "LambdaAuthSecurityGroup"),
-            vpc=vpc,
-            description="Security group for Lambda Authorizer",
-            allow_all_outbound=False
-        )
-
-        lambda_auth_security_group.add_egress_rule(
-            peer=ec2.Peer.any_ipv4(),
-            connection=ec2.Port.tcp(443),
-            description="Allow HTTPS"
-        )
-
-        # Secret that contains the Basic Auth credentials to access the portal
-        secret = secretsmanager.Secret(self, 'PiiRedactionPortalAuthSecret',
-            secret_name=stackPrefix(resource_prefix, "PiiRedactionPortalAuthSecret"),
-            description='Credentials for PII Redaction using Amazon Bedrock portal application',
-            generate_secret_string=secretsmanager.SecretStringGenerator(
-                secret_string_template=json.dumps({'username': 'pii_redaction_email_admin'}),
-                generate_string_key='password',
-                exclude_punctuation=True,
-                include_space=False
-            )
-        )
-        
-        # Basic Auth
-        lambda_auth_handler = lambda_.Function(self, 'LambdaAuthHandler',
-            function_name=stackPrefix(resource_prefix, "LambdaAuthHandler"),
-            runtime=lambda_.Runtime.PYTHON_3_12,
-            code=lambda_.Code.from_asset(os.path.join(os.path.dirname(__file__), 'lambda')),
-            handler='basic_auth_authorizer.handler',
-            environment={
-                'ENVIRONMENT': 'development',
-                'SECRET_ARN': secret.secret_full_arn
-            },
-            layers=[powertools_layer],
-            memory_size=512,
-            timeout=Duration.seconds(60),
-            logging_format=lambda_.LoggingFormat.TEXT,
-            vpc=vpc,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-            security_groups=[lambda_auth_security_group],
-            log_group=logs.LogGroup(self, 'LambdaAuthHandlerLogGroup', 
-                log_group_name=stackPrefix(resource_prefix, "LambdaAuthHandlerLogGroup"),
-                removal_policy=RemovalPolicy.DESTROY
-            ),
-            tracing=lambda_.Tracing.ACTIVE
-        )
-        lambda_auth_handler_role = lambda_auth_handler.role
-        secret.grant_read(lambda_auth_handler_role)
-
         portal_api_handler_role = portal_lambda_handler.role
         redacted_bucket.grant_read(portal_api_handler_role)
         portal_api_handler_role.add_managed_policy(
@@ -427,14 +363,6 @@ class PortalStack(Stack):
         )
         private_hosting_bucket.grant_read(api_gw_s3_role)
 
-        # Lambda token authorizer
-        authorizer = apigateway.TokenAuthorizer(self, 'LambdaAuthorizer',
-            authorizer_name=stackPrefix(resource_prefix, "LambdaAuthorizer"),
-            handler=lambda_auth_handler,
-            identity_source=apigateway.IdentitySource.header('Authorization'),
-            results_cache_ttl=Duration.seconds(300),
-        )
-
         apigw_log_group = logs.LogGroup(self, "ApiGatewayAccessLogs",
             retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
@@ -455,7 +383,7 @@ class PortalStack(Stack):
                 throttling_burst_limit=5000
             ),
             default_method_options=apigateway.MethodOptions(
-                authorizer=authorizer,
+                authorization_type=apigateway.AuthorizationType.NONE,
                 method_responses=[
                     apigateway.MethodResponse(
                         status_code='200',
@@ -466,22 +394,7 @@ class PortalStack(Stack):
                 ]
             ),
             cloud_watch_role=True,
-            cloud_watch_role_removal_policy=RemovalPolicy.DESTROY,
-            policy=iam.PolicyDocument(
-                statements=[
-                    iam.PolicyStatement(
-                        effect=iam.Effect.ALLOW,
-                        actions=['lambda:InvokeFunction'],
-                        resources=[
-                            lambda_auth_handler.function_arn,
-                            f"{lambda_auth_handler.function_arn}:*",
-                            portal_lambda_handler.function_arn,
-                            f"{portal_lambda_handler.function_arn}:*"
-                        ],
-                        principals=[iam.ServicePrincipal('apigateway.amazonaws.com')],
-                    )
-                ]
-            )
+            cloud_watch_role_removal_policy=RemovalPolicy.DESTROY
         )
 
         private_hosting_bucket.add_to_resource_policy(iam.PolicyStatement(
@@ -498,19 +411,6 @@ class PortalStack(Stack):
             principal=iam.ServicePrincipal('apigateway.amazonaws.com'),
             action='lambda:InvokeFunction',
             source_arn=f"arn:aws:execute-api:{Aws.REGION}:{Aws.ACCOUNT_ID}:{api.rest_api_id}/*/*/*"
-        )
-
-        # API Gateway gateway response that initiates Basic Auth request
-        apigateway.GatewayResponse(self, 'GatewayResponse',
-            rest_api=api,
-            type=apigateway.ResponseType.UNAUTHORIZED,
-            response_headers={
-                'method.response.header.WWW-Authenticate': "'Basic'"
-            },
-            status_code='401',
-            templates={
-                'application/json': "{ 'message': $context.error.messageString }"
-            }
         )
 
         # Integration for UI-related endpoints that service static assets
@@ -593,8 +493,7 @@ class PortalStack(Stack):
                     passthrough_behavior=apigateway.PassthroughBehavior.WHEN_NO_TEMPLATES,
                     credentials_role=api_gw_s3_role,
                     request_parameters={
-                        'integration.request.path.asset': 'method.request.path.asset',
-                        'integration.request.header.x-ocloud-apigateway': "'private'"
+                        'integration.request.path.asset': 'method.request.path.asset'
                     },
                     integration_responses=[
                         apigateway.IntegrationResponse(
