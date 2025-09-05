@@ -55,7 +55,7 @@ class ConsumerStack(Stack):
         kms_key = kms.Key.from_key_arn(self, "KMSKey", f"arn:aws:kms:{self.region}:{self.account}:alias/aws/sns")
         #create project with custom settings for bedrock data automation
         cfn_bda = bedrock.CfnDataAutomationProject(self, "piiRedactionBedrockProject",
-                                                   project_name="piiBedrockDataAutomationProject",
+                                                   project_name=stackPrefix(resource_prefix, "piiBedrockDataAutomationProject"),
                                          standard_output_configuration = bedrock.CfnDataAutomationProject.StandardOutputConfigurationProperty(
                                              document=bedrock.CfnDataAutomationProject.DocumentStandardOutputConfigurationProperty(
                                                 extraction=bedrock.CfnDataAutomationProject.DocumentStandardExtractionProperty(
