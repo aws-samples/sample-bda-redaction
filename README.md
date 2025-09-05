@@ -370,14 +370,14 @@ cdk destroy <<resource_name_prefix>>-S3Stack
 - Access log bucket is version enabled and deleting the content of the bucket in the above step does not delete versioned objects in the bucket. That need to removed separately using below aws cli commands:
   ```sh
   #to remove versioned objects use below aws cli command
-  aws s3api delete-objects --bucket ${buckettoempty} --delete "$(aws s3api list-object-versions --bucket ${buckettoempty} --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"
+  aws s3api delete-objects --bucket ${accesslogbucket} --delete "$(aws s3api list-object-versions --bucket ${accesslogbucket} --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"
   #once versioned objects are removed we need to remove the delete markers of the versioned objects using below aws cli command
-  aws s3api delete-objects --bucket ${buckettoempty} --delete "$(aws s3api list-object-versions --bucket ${buckettoempty} --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
+  aws s3api delete-objects --bucket ${accesslogbucket} --delete "$(aws s3api list-object-versions --bucket ${accesslogbucket} --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
   ```
 - Delete the access log Amazon S3 bucket using below aws cli command:
   ```sh
   #delete the access log bucket itself using below aws cli command
-  aws s3api  delete-bucket --bucket ${buckettoempty}
+  aws s3api  delete-bucket --bucket ${accesslogbucket}
   ```
 5.	If you have configured Amazon SES:
 - [Remove the verified domain/email identities](https://docs.aws.amazon.com/ses/latest/dg/remove-verified-domain.html)
