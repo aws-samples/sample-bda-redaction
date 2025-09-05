@@ -365,6 +365,16 @@ cdk destroy <<resource_name_prefix>>-ConsumerStack
 ```sh
 cdk destroy <<resource_name_prefix>>-S3Stack
 ```
+4.  CDK Destroy does not remove the access log Amazon S3 bucket created as part of the deployment. You can get access log bucket name in the output tab of stack `<<resource_name_prefix>>-S3Stack` with export name `AccessLogsBucket`. Execute below steps to delete the access log bucket:
+- Delete the contents of the access log bucket, follow link [S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/delete-bucket.html)
+- Delete the access log Amazon S3 bucket using below aws cli command
+  ```sh
+  #access log Amazon S3 bucket is version and deleting the content does not delete the versioned objects so need to remove versioned objects first using below aws cli command
+  aws s3api delete-objects --bucket ${buckettoempty} --delete "$(aws s3api list-object-versions --bucket ${buckettoempty} --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"
+  #once versioned objects are remove we need to remove the delete markers of the versioned objects using below aws cli command
+  aws s3api delete-objects --bucket ${buckettoempty} --delete "$(aws s3api list-object-versions --bucket ${buckettoempty} --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
+  #delete the access log bucket itself using below aws cli command
+  aws s3api  delete-bucket --bucket ${buckettoempty}
 4.	If you have configured Amazon SES:
 - [Remove the verified domain/email identities](https://docs.aws.amazon.com/ses/latest/dg/remove-verified-domain.html)
 - Delete the MX records from your DNS provider
