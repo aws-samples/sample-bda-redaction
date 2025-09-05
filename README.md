@@ -375,14 +375,15 @@ cdk destroy <<resource_name_prefix>>-S3Stack
   aws s3api delete-objects --bucket ${buckettoempty} --delete "$(aws s3api list-object-versions --bucket ${buckettoempty} --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')"
   #delete the access log bucket itself using below aws cli command
   aws s3api  delete-bucket --bucket ${buckettoempty}
-4.	If you have configured Amazon SES:
+  ```
+5.	If you have configured Amazon SES:
 - [Remove the verified domain/email identities](https://docs.aws.amazon.com/ses/latest/dg/remove-verified-domain.html)
 - Delete the MX records from your DNS provider
 - Delete the SMTP credentials from [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_delete-secret.html)
-5.	If you have configured the Portal with a custom domain:
+6.	If you have configured the Portal with a custom domain:
 - Remove the [API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html) custom domain name
 - [Delete any associated ACM certificates](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-delete.html)
 - Remove any DNS CNAME records
-6.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
+7.	[Delete any CloudWatch Log groups](https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws-foundation/deleting-the-cloudwatch-logs.html) created by the Lambda functions
 
 Note: The VPC and its associated resources as prerequisites for this solution may not be deleted if they may be used by other applications.
