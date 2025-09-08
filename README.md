@@ -345,8 +345,8 @@ cdk destroy <<resource_name_prefix>>-ConsumerStack
 cdk destroy <<resource_name_prefix>>-S3Stack
 ```
 4.  CDK Destroy does not remove the access log Amazon S3 bucket created as part of the deployment. You can get access log bucket name in the output tab of stack `<<resource_name_prefix>>-S3Stack` with export name `AccessLogsBucket`. Execute below steps to delete the access log bucket:
-- Delete the contents of the access log bucket, follow link [S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/delete-bucket.html)
-- Access log bucket is version enabled and deleting the content of the bucket in the above step does not delete versioned objects in the bucket. That need to removed separately using below aws cli commands:
+- Delete the contents of the access log bucket, follow the [instructions on deleting S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/delete-bucket.html)
+- Access log bucket is version enabled and deleting the content of the bucket in the above step does not delete versioned objects in the bucket. That needs to be removed separately using below aws cli commands:
   ```sh
   #to remove versioned objects use below aws cli command
   aws s3api delete-objects --bucket ${accesslogbucket} --delete "$(aws s3api list-object-versions --bucket ${accesslogbucket} --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"
