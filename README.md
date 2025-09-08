@@ -296,7 +296,7 @@ aws s3 sync dist/ s3://<<name-of-s3-bucket>> --delete
 ```
 `<<name-of-s3-bucket>>` is the S3 bucket that was created in the `<<resource-name-prefix>>-PortalStack` CloudFormation stack with the Logical ID of PrivateWebHostingAssets. This value can be obtained from the Resources tab of the CloudFormation stack in the AWS Console.
 
-This value is also output during the `cdk deploy` process when the PortalStack has been successfully completed.
+This value is also output during the `cdk deploy` process when the PortalStack has been successfully completed. 
 
 ### Portal Access
 
@@ -305,11 +305,15 @@ Use the API Gateway invoke URL from the API Gateway that has been created during
 1. Navigate to the AWS Console
 2. Navigate to API Gateway and find the API Gateway that has been created during the `cdk deploy` process. The name of the API Gateway can be found in the Resources section of the `<<resource-name-prefix>>-PortalStack` CloudFormation stack.
 3. Click on the **Stages** link in the left-hand menu.
-4. Ensure that the ** portal** stage is selected
-5. Find the **Invoke URL** and copy that value
-6. Enter that value in the address bar of your web browser
+4. Ensure that the ** portal** stage is selected.
+5. Find the **Invoke URL** and copy that value.
+6. Enter that value in the address bar of your web browser.
 
 You should now see the portal's user interface visible within the web browser. If any emails have been processed, they will be listed on the home page of the portal.
+
+### Access Control (optional)
+
+For production deployment we recommend customers to control access to the Portal using the approaches here https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html
 
 ## Clean up
 
