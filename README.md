@@ -174,7 +174,7 @@ As described earlier the solution is used to redact any PII data in email body a
 We can do that without Amazon SES as well by directly uploading an email file to the raw S3 bucket. Raw bucket name can be found on the output tab in the AWS CloudFormation Console for <<resource_name_prefix>>-S3Stack stack and Export Name `RawBucket`. 
 This will trigger the workflow of redacting the email body and attachment by S3 event notification triggering the Lambda. 
 
-For convenience a sample email is available in **"infra/pii_redaction/sample_email"** directory of the repository. Below are the steps to test application without Amazon SES using the same email file.
+For your convenience a sample email is available in **"infra/pii_redaction/sample_email"** directory of the repository. Below are the steps to test application without Amazon SES using the same email file.
 
 ```sh
 # Replace <<raw_bucket>> with raw bucket name created during deployment:
