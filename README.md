@@ -47,6 +47,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 
 ### Amazon SES (optional)
 **Move directly to the Solution Deployment section below if you are not using Amazon SES**
+
 Below Amazon SES Setup is optional. One can test the code without this setup as well. Steps to test the application with or without Amazon SES is covered in **Testing** section.
 
 Set up Amazon SES with prod access and verify the domain/email identities for which the solution is to work. We also need to add the MX records in the DNS provider maintaining the domain. Please refer to the links below:
