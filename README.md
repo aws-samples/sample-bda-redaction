@@ -314,7 +314,7 @@ You should now see the portal's user interface visible within the web browser. I
 
 ### Access Control (optional)
 
-For production deployment we recommend customers to control access to the Portal using the approaches here https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html
+For production deployment, we recommend [these approaches](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-to-api.html) to controlling and managing access to the Portal.
 
 ## Clean up
 
