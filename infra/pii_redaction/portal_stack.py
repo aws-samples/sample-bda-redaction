@@ -592,3 +592,5 @@ class PortalStack(Stack):
         )
 
         self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
+        self.api_gateway_invoke_url = CfnOutput(self, "PiiPortalApiGatewayInvokeUrl", value=api.url, export_name="PiiPortalApiGatewayInvokeUrl")
+

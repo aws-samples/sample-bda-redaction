@@ -327,7 +327,7 @@ def list_rules():
         logger.debug(folders)
     
         for rule in results['Items']:
-            rule['FolderName'] = next((item['Name'] for item in folders['Items'] if item['ID'] == rule['FolderID']), None)
+            rule['FolderName'] = next((item['Name'] for item in folders if item['ID'] == rule['FolderID']), None)
 
     record_user_activity(f"viewed all rules")
     return results['Items']
