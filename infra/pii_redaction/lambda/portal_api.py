@@ -316,11 +316,11 @@ def list_rules():
     logger.debug(results['Items'])
 
     if results['Items']:
-        folder_ids = [item['FolderID'] for item in results['Items']]
+        unique_folder_ids = set([item['FolderID'] for item in results['Items']])
         folders_tbl = dynamodb.Table(os.environ['FOLDERS_TABLE_NAME'])
         folders = folders_tbl.meta.client.batch_get_item(
             RequestItems={
-                folders_tbl.name: {'Keys': [{'ID': folder_id} for folder_id in folder_ids]}
+                folders_tbl.name: {'Keys': [{'ID': folder_id} for folder_id in unique_folder_ids]}
             }
         )
         folders = folders['Responses'][folders_tbl.name]
