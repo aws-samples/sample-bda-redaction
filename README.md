@@ -9,8 +9,8 @@ The following diagram outlines the solution architecture.
 <img alt="PII Detection Redaction Amazon Bedrock" src="./assets/pii_detection_redcation_solution_diagram.png" />
 
 The diagram illustrates the backend PII detection and redaction workflow and the frontend application user interface orchestrated by [AWS Lambda](https://aws.amazon.com/lambda/) and [Amazon EventBridge](https://aws.amazon.com/eventbridge/). The process follows these steps:
-1.	The workflow starts with the user sending an email to the incoming email server hosted on [Amazon Simple Email Service](https://aws.amazon.com/ses/) (Amazon SES)(optional). 
-2.	Amazon SES then stores the emails and attachments in an [Amazon Simple Storage Service](https://aws.amazon.com/s3/) (S3) landing bucket. 
+1.	The workflow starts with the user sending an email to the incoming email server hosted on [Amazon Simple Email Service](https://aws.amazon.com/ses/) (Amazon SES). This is an optional step.
+2.	2.	Alternatively, users can upload the emails and attachments directly into an [Amazon Simple Storage Service](https://aws.amazon.com/s3/) (S3) landing bucket. 
 3.	An S3 event notification triggers the initial processing AWS Lambda function that generates a unique case ID and creates a tracking record in [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
 4.	Lambda orchestrates the PII detection and redaction workflow by extracting email body and attachments from the email and saving in raw email bucket followed by invoking [Amazon Bedrock Data Automation](https://aws.amazon.com/bedrock/bda/) and [Amazon Bedrock Guardrails](https://aws.amazon.com/bedrock/guardrails/) for detecting and redacting PII. 
 5.	Amazon Bedrock Data Automation processes attachments to extract text from the files.
@@ -18,32 +18,32 @@ The diagram illustrates the backend PII detection and redaction workflow and the
 7.	DynamoDB tables are updated with email messages, folders metadata, and email filtering rules. 
 8.	An Amazon EventBridge Scheduler is used to run the Rules Engine Lambda on a schedule which will process new emails that have yet to be categorized into folders based on enabled email filtering rules criteria. 
 9.	The Rules Engine Lambda also communicates with DynamoDB to access the messages table and the rules table.
-10.	Users can access the application user interface where [Amazon API Gateway](https://aws.amazon.com/api-gateway/) manages user API requests and routes requests to render the user interface through S3 static hosting.
+10.	Users can access the optional application user interface through [Amazon API Gateway](https://aws.amazon.com/api-gateway/), which manages user API requests and routes requests to render the user interface through S3 static hosting. Users may choose to enable authentication for the user interface based on their security requirements. Alternatively, users can check the status of their email processing in the DynamoDB table and S3 bucket with PII redacted content.
 11.	A Portal API Lambda fetches the case details based on user requests.
 12.	The static assets served by API Gateway are stored in a private S3 bucket.
-13.	[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) provide visibility into the PII detection and redaction process, while [Amazon Simple Notification Service](https://aws.amazon.com/sns/) delivers real-time alerts for any failures, ensuring immediate attention to issues.
+13.	Optionally, users may enable [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) and [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) to provide visibility into the PII detection and redaction process, while using [Amazon Simple Notification Service](https://aws.amazon.com/sns/) to deliver real-time alerts for any failures, ensuring immediate attention to issues.
 
-## Infrastructure
-### Install Prerequisites
-This application requires the installation of the following software tools:
+The solution implementation involves infrastructure and optional portal setup.
+
+## Solution Prerequisites
+This solution requires the installation of the following software tools:
+* An [AWS account](https://signin.aws.amazon.com/signin?redirect_uri=https%3A%2F%2Fportal.aws.amazon.com%2Fbilling%2Fsignup%2Fresume&client_id=signup)
+* [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) 
 * [Python v3.12 or higher](https://www.python.org/downloads/)
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 * [AWS CDK v2.166 or higher](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html)
 * Terminal/CLI such as macOS Terminal, PowerShell or Windows Terminal, or the Linux command line. [AWS CloudShell](https://aws.amazon.com/cloudshell/) can also be used when all code is located within an AWS account.
-
-### Infrastructure Prerequisites
-All CloudFormation stacks need to be deployed within the same AWS account.
-
-An existing [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/create-vpc.html) that contains 3 private subnets with no internet access is needed.
+### Infrastructure
+Ensure that an existing [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/create-vpc.html) that contains 3 private subnets with no internet access is created in your AWS account. All CloudFormation stacks need to be deployed within the same AWS account.
 
 ### CloudFormation Stacks
 The solution contains 3 stacks (2 required, 1 optional) that will be deployed in your AWS account:
 * **S3Stack** - Provisions the core infrastructure including S3 buckets for raw and redacted email storage with automatic lifecycle policies, a DynamoDB table for email metadata tracking with time-to-live (TTL) and global secondary indexes, and VPC security groups for secure Lambda function access. It also creates IAM roles with comprehensive permissions for S3, DynamoDB, and Bedrock services, forming the secure foundation for the entire PII detection and redaction workflow.
 
-* **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured, Lambda layers for dependency management, and S3 event notifications to trigger the email processing workflow automatically.
+* **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured and S3 event notifications to trigger the email processing workflow automatically.
 
-* **PortalStack (optional)** - Provisions the optional web interface including a regional API Gateway, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
+* **PortalStack (optional)** - This is only needed when users want to use a web-based user interface for managing emails, folders, and rules. It provisions the optional web interface including a regional API Gateway, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
 
 ### Amazon SES (optional)
 **Move directly to the Solution Deployment section below if you are not using Amazon SES**
@@ -192,7 +192,7 @@ Once redaction is completed you can find the redacted email body in `<<redacted_
 
 **IMPORTANT:** The installation of the portal is completely optional. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
 
-The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to organize, view, and forward sanitized email content.
+The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to organize, view, and forward sanitized email content. You may use the Portal for following use cases.
 
 ### Portal Use Cases
 
@@ -215,7 +215,7 @@ The portal serves as a web interface to manage the PII-redacted emails processed
 
 ### Install Prerequisites
 
-This application requires the installation of the following software tools:
+This portal requires the installation of the following software tools:
 * [TypeScript](https://www.typescriptlang.org/)
 * [Node v18 or higher](https://nodejs.org/en/download/package-manager)
 * [NPM v9.8 or higher](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
@@ -299,7 +299,7 @@ aws s3 sync dist/ s3://<<name-of-s3-bucket>> --delete
 
 This value is also output during the `cdk deploy` process when the PortalStack has been successfully completed. 
 
-### Portal Access
+### Accessing the Portal
 
 Use the API Gateway invoke URL from the API Gateway that has been created during the `cdk deploy` process to access the portal from a web browser. You can find this URL by following these steps:
 
