@@ -192,11 +192,7 @@ Once redaction is completed you can find the redacted email body in `<<redacted_
 
 **IMPORTANT:** The installation of the portal is completely optional. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
 
-The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to view sanitized email content. You may use the Portal for following use cases.
-
-### Portal Use Cases
-
-#### Email Management
+The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to view sanitized email content. You may use the Portal to:
 - **List Messages**: View processed emails with redacted content
 - **Message Details**: View individual email content and attachments
 
@@ -252,7 +248,7 @@ You can also create the file using your preferred text editor as well.
 
 | Environment Variable Name | Default | Description | Required |
 | ------ | ---- | -------- | --------- |
-| VITE_APIGW | `""` | URL of the API Gateway invoke URL (including protocol) without the path (remove `/portal` from the value). This value can be found in the output of the PortalStack after deploying through AWS CDK. It can also be found under the Outputs tab of the PortalStack CloudFormation stack under the export name of `PiiPortalApiGatewayInvokeUrl` | Yes
+| VITE_APIGW | `""` | URL of the API Gateway invokes URL (including protocol) without the path (remove `/portal` from the value). This value can be found in the output of the PortalStack after deploying through AWS CDK. It can also be found under the Outputs tab of the PortalStack CloudFormation stack under the export name of `PiiPortalApiGatewayInvokeUrl` | Yes
 | VITE_BASE | `/portal` | It specifies the path used to request the static files needed to  render the portal | Yes
 | VITE_API_PATH | `/api` | It specifies the path needed to send requests to the API Gateway | Yes
 
