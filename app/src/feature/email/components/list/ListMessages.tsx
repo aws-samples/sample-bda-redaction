@@ -21,7 +21,6 @@ import {
   Spinner,
 } from "@cloudscape-design/components";
 import { useCollection } from "@cloudscape-design/collection-hooks";
-import { useParams } from "react-router-dom";
 import EmailPreviewBody from "../../../../foundation/email/components/EmailPreviewBody";
 import FullEmailDisplay from "../../../../foundation/email/components/FullEmailDisplay";
 import { Email } from "../../../../foundation/email/types";
@@ -30,21 +29,14 @@ import { getMatchesCountText } from "../../../../foundation/ui/table/libs/helper
 import { ModalOpenState } from "../../../../foundation/ui/types";
 import { useGetMessages } from "../../hooks/UseGetMessages";
 import { useGetMessage } from "../../hooks/UseGetMessage";
-import { useGetFolder } from "../../../folders/hooks/UseGetFolder";
-import { useExportMessage } from "../../hooks/UseExportMessages";
 import { useAppHelpers } from "../../../../foundation/ui/layout/libs/helpers";
-import ForwardEmail from "../forward/ForwardMessage";
-import RoutedButton from "../../../../foundation/ui/buttons/RoutedButton";
 
 function ListMessages() {
   const outletCtx = useAppHelpers();
-  const params = useParams();
   const forwardEmailModalRef = useRef<ModalOpenState>(null);
   const [selectedItems, setSelectedItems] = useState<readonly Email[]>([]);
-  const messages = useGetMessages(params?.folder_id);
+  const messages = useGetMessages();
   const message = useGetMessage(selectedItems[0]?.CaseID);
-  const folder = useGetFolder(params?.folder_id);
-  const { mutate, isPending: isExportMessagePending } = useExportMessage();
   const EmptyMessagePane =
     <Box variant="div" padding={{horizontal: 'xl', vertical: 'xxxl'}}>
       <Box variant="p" textAlign="center">Please, select an email message from the inbox first.</Box>
@@ -205,13 +197,6 @@ function ListMessages() {
     }
   }, [message.data]);
 
-  useEffect(() => {
-    folder.refetch();
-    messages.refetch();
-    outletCtx.setActiveDrawer(getMessagePane(EmptyMessagePane));
-    setSelectedItems([]);
-  }, [params?.folder_id])
-
   return (
     <>
       {
@@ -225,25 +210,10 @@ function ListMessages() {
                 <Box>
                   <Button iconName="refresh" onClick={() => messages.refetch()} />
                 </Box>
-                <RoutedButton variant="normal" buttonText="Add Folder" href={`${import.meta.env.VITE_BASE}/folders/create`} onClick={() => {
-                  outletCtx.setActiveDrawer([]);
-                  outletCtx.setActiveDrawerId("");
-                }} />
-                {
-                   (import.meta.env.VITE_EMAIL_ENABLED === "true") &&
-                  <RoutedButton variant="normal" buttonText="Add Filtering Rule" href={`${import.meta.env.VITE_BASE}/rules/create`} onClick={() => {
-                    outletCtx.setActiveDrawer([]);
-                    outletCtx.setActiveDrawerId("");
-                  }} />
-                }
-                {
-                  messages.data && messages.data?.length > 0 &&
-                  <Button variant="primary" iconName="download" disabled={isExportMessagePending} onClick={() => mutate({case_id: items?.map(message => message.CaseID) ?? []})}>Export</Button>
-                }
               </SpaceBetween>
             }
           >
-            { (folder.data) ? folder.data?.Name : "Inbox" }
+            Inbox
           </Header>
         :
           <Spinner size="large" />
@@ -313,11 +283,6 @@ function ListMessages() {
           />
         }
       />
-
-      {
-        (selectedItems.length === 1 && import.meta.env.VITE_EMAIL_ENABLED === "true") &&
-        <ForwardEmail ref={forwardEmailModalRef} email={message.data!} />
-      }
     </>
   )
 }

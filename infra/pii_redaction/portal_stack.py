@@ -10,14 +10,11 @@ from aws_cdk import (
     Fn,
     RemovalPolicy,
     Stack,
-    TimeZone,
     aws_dynamodb as dynamodb,
     aws_apigateway as apigateway,
     aws_lambda as lambda_,
     aws_iam as iam,
     aws_logs as logs,
-    aws_scheduler_alpha as scheduler,
-    aws_scheduler_targets_alpha as targets,
     aws_s3 as s3,
     aws_ec2 as ec2,
     custom_resources as cr
@@ -87,26 +84,6 @@ class PortalStack(Stack):
             point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
                     point_in_time_recovery_enabled=True)
         )
-        
-        # Create new DynamoDB table for email rules
-        rules_tbl = dynamodb.TableV2(self, 'ProcessingRulesTable', 
-            table_name=stackPrefix(resource_prefix, "ProcessingRulesTable"),
-            table_class=dynamodb.TableClass.STANDARD,
-            partition_key=dynamodb.Attribute(name='ID', type=dynamodb.AttributeType.STRING),
-            removal_policy=RemovalPolicy.DESTROY,
-            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
-                    point_in_time_recovery_enabled=True)
-        )
-
-        # Add GSI to easily query rules by assigned FolderID
-        rules_tbl.add_global_secondary_index(
-            index_name="RulesIndexFolderID",
-            partition_key=dynamodb.Attribute(
-                name="FolderID",
-                type=dynamodb.AttributeType.STRING
-            ),
-            projection_type=dynamodb.ProjectionType.ALL
-        )
 
         # Initialize folders table with default folder
         cr.AwsCustomResource(self, "InitFoldersTable",
@@ -153,57 +130,6 @@ class PortalStack(Stack):
             compatible_runtimes=[lambda_.Runtime.PYTHON_3_12]
         )
 
-        # Lambda function for processing rules and categorizing messages in folders
-        rules_processing_lambda = lambda_.Function(self, 'RulesProcessingHandler',
-            function_name=stackPrefix(resource_prefix, "RulesProcessingHandler"),
-            runtime=lambda_.Runtime.PYTHON_3_12,
-            code=lambda_.Code.from_asset(os.path.join(os.path.dirname(__file__), 'lambda')),
-            handler='rules_processing.handler',
-            environment={
-                'MESSAGES_TABLE_NAME': email_table_name,
-                'RULES_TABLE_NAME': rules_tbl.table_name,
-                'ENVIRONMENT': environment
-            },
-            layers=[powertools_layer],
-            memory_size=512,
-            timeout=Duration.seconds(30),
-            logging_format=lambda_.LoggingFormat.TEXT,
-            vpc=vpc,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-            security_groups=[security_group],
-            log_group=logs.LogGroup(self, 'RulesProcessingHandlerLogGroup', 
-                log_group_name=stackPrefix(resource_prefix, "RulesProcessingHandlerLogGroup"),
-                removal_policy=RemovalPolicy.DESTROY
-            ),
-            tracing=lambda_.Tracing.ACTIVE
-        )
-
-        rules_processing_handler_role = rules_processing_lambda.role
-        redacted_bucket.grant_read(rules_processing_handler_role)
-        rules_tbl.grant_read_data(rules_processing_lambda)
-        messages_tbl.grant_read_data(rules_processing_lambda)
-        messages_tbl.grant_write_data(rules_processing_lambda)
-
-        rules_processing_handler_role.add_to_policy(iam.PolicyStatement(
-            effect=iam.Effect.ALLOW,
-            actions=[
-                "dynamodb:Query",
-                "dynamodb:Scan",
-                "dynamodb:GetItem",
-                "dynamodb:BatchGetItem",
-                "dynamodb:PutItem",
-                "dynamodb:UpdateItem",
-                "dynamodb:DeleteItem",
-                "dynamodb:BatchWriteItem",
-                "dynamodb:DescribeTable"
-            ],
-            resources=[
-                f"arn:aws:dynamodb:{Aws.REGION}:{Aws.ACCOUNT_ID}:table/{messages_tbl.table_name}/index/*",
-                f"arn:aws:dynamodb:{Aws.REGION}:{Aws.ACCOUNT_ID}:table/{rules_tbl.table_name}/index/*",
-                f"arn:aws:dynamodb:{Aws.REGION}:{Aws.ACCOUNT_ID}:table/{folders_tbl.table_name}/index/*"
-            ]
-        ))
-
         # Lambda function that handles all API requests initiated from the portal
         portal_lambda_handler = lambda_.Function(self, 'PortalLambdaHandler',
             function_name=stackPrefix(resource_prefix, "PortalLambdaHandler"),
@@ -213,8 +139,6 @@ class PortalStack(Stack):
             environment={
                 'MESSAGES_TABLE_NAME': email_table_name,
                 'FOLDERS_TABLE_NAME': folders_tbl.table_name,
-                'RULES_TABLE_NAME': rules_tbl.table_name,
-                'RULES_PROCESSING_LAMBDA_ARN': rules_processing_lambda.function_arn,
                 'ENVIRONMENT': environment
             },
             layers=[powertools_layer, packages_layer],
@@ -346,15 +270,12 @@ class PortalStack(Stack):
             ],
             resources=[
                 f"arn:aws:dynamodb:{Aws.REGION}:{Aws.ACCOUNT_ID}:table/{messages_tbl.table_name}/index/*",
-                f"arn:aws:dynamodb:{Aws.REGION}:{Aws.ACCOUNT_ID}:table/{rules_tbl.table_name}/index/*",
                 f"arn:aws:dynamodb:{Aws.REGION}:{Aws.ACCOUNT_ID}:table/{folders_tbl.table_name}/index/*"
             ]
         ))
 
-        rules_processing_lambda.grant_invoke(portal_api_handler_role)
         messages_tbl.grant_read_write_data(portal_api_handler_role)
         folders_tbl.grant_read_write_data(portal_api_handler_role)
-        rules_tbl.grant_read_write_data(portal_api_handler_role)
 
         api_gw_s3_role = iam.Role(self, 'ApiGwS3Role',
             role_name=stackPrefix(resource_prefix, "ApiGwS3Role"),
@@ -547,50 +468,5 @@ class PortalStack(Stack):
         singleMessage.add_method('GET', operation_name='getMessage')
         singleMessage.add_resource('forward').add_method('POST', operation_name='forwardMessage')
 
-        folders = apiResources.add_resource('folders')
-        folders.add_method('GET', operation_name='getFolders')
-        folders.add_method('POST', operation_name='createFolder')
-        
-        singleFolder = folders.add_resource("{folder_id}", default_method_options=apigateway.MethodOptions(
-                request_parameters={
-                    'method.request.path.folder_id': True
-                }
-            )
-        )
-        singleFolder.add_method('GET', operation_name='getFolder')
-        singleFolder.add_method('DELETE', operation_name='deleteFolder')
-        singleFolder.add_resource('messages').add_method('GET', operation_name='getFolderMessages')
-
-        rules = apiResources.add_resource('rules')
-        rules.add_method('GET', operation_name='getRules')
-        rules.add_method('POST', operation_name='createRule')
-
-        singleRule = rules.add_resource('{rule_id}', default_method_options=apigateway.MethodOptions(
-                request_parameters={
-                    'method.request.path.rule_id': True
-                }
-            )
-        )
-        singleRule.add_method('GET', operation_name='getRule')
-        singleRule.add_method('DELETE', operation_name='deleteRule')
-        singleRule.add_method('PATCH', operation_name='patchRule')
-
-        # EventBridge scheduler to run email rules processing lambda every day at 2:00 AM EST
-        scheduler.Schedule(self, 'RulesProcessingSchedule',
-            schedule=scheduler.ScheduleExpression.cron(
-                minute='0',
-                hour='2',
-                day='*',
-                month='*',
-                year='*',
-                time_zone=TimeZone.AMERICA_NEW_YORK
-            ),
-            target=targets.LambdaInvoke(rules_processing_lambda),
-            description='Runs daily at 2:00 AM EST to process rules',
-            enabled=True,
-            schedule_name=stackPrefix(resource_prefix, "RulesProcessingSchedule"),
-        )
-
         self.private_web_hosting_s3_bucket = CfnOutput(self, "S3PrivateWebHostingBucket", value=private_hosting_bucket.bucket_name, export_name="S3PrivateWebHostingBucket")
         self.api_gateway_invoke_url = CfnOutput(self, "PiiPortalApiGatewayInvokeUrl", value=api.url, export_name="PiiPortalApiGatewayInvokeUrl")
-

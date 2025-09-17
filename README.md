@@ -43,7 +43,7 @@ The solution contains 3 stacks (2 required, 1 optional) that will be deployed in
 
 * **ConsumerStack** - Provisions the core processing infrastructure including Amazon Bedrock Data Automation projects for document text extraction and Bedrock Guardrails configured to anonymize comprehensive PII entities, along with Lambda functions for email and attachment processing with SNS topics for success/failure notifications. It also creates SES receipt rules for incoming email handling when a domain is configured and S3 event notifications to trigger the email processing workflow automatically.
 
-* **PortalStack (optional)** - This is only needed when users want to use a web-based user interface for managing emails, folders, and rules. It provisions the optional web interface including a regional API Gateway, DynamoDB tables for folders and rules management, and S3 buckets for static web assets. It also creates EventBridge schedulers for automated rules processing, lambda functions for portal API handling and email forwarding functionality when configured.
+* **PortalStack (optional)** - This is only needed when users want to use a web-based user interface for managing emails. It provisions the optional web interface including a regional API Gateway, DynamoDB tables for redacted message storage, and S3 buckets for static web assets.
 
 ### Amazon SES (optional)
 **Move directly to the Solution Deployment section below if you are not using Amazon SES**
@@ -192,26 +192,13 @@ Once redaction is completed you can find the redacted email body in `<<redacted_
 
 **IMPORTANT:** The installation of the portal is completely optional. You can skip this section and check the AWS console of the AWS account where the solution is deployed to view the resources created.
 
-The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to organize, view, and forward sanitized email content. You may use the Portal for following use cases.
+The portal serves as a web interface to manage the PII-redacted emails processed by the backend AWS infrastructure, allowing users to view sanitized email content. You may use the Portal for following use cases.
 
 ### Portal Use Cases
 
 #### Email Management
 - **List Messages**: View processed emails with redacted content
-- **Forward Messages**: Send redacted emails to other recipients (when SES is configured)
-- **Export Messages**: Export email data for external use
 - **Message Details**: View individual email content and attachments
-
-#### Folder Management
-- **Create Folders**: Organize emails into custom folders
-- **List Folders**: View and manage existing folder structure
-- **Delete Folders**: Remove folders when no longer needed
-
-#### Rules Engine
-- **Create Rules**: Define automated email categorization rules
-- **List Rules**: View existing email filtering rules
-- **Toggle Rules**: Enable/disable rules without deletion
-- **Delete Rules**: Remove rules permanently
 
 ### Install Prerequisites
 
@@ -268,7 +255,6 @@ You can also create the file using your preferred text editor as well.
 | VITE_APIGW | `""` | URL of the API Gateway invoke URL (including protocol) without the path (remove `/portal` from the value). This value can be found in the output of the PortalStack after deploying through AWS CDK. It can also be found under the Outputs tab of the PortalStack CloudFormation stack under the export name of `PiiPortalApiGatewayInvokeUrl` | Yes
 | VITE_BASE | `/portal` | It specifies the path used to request the static files needed to  render the portal | Yes
 | VITE_API_PATH | `/api` | It specifies the path needed to send requests to the API Gateway | Yes
-| VITE_EMAIL_ENABLED | `false` | It enables/disables the forward email function. Values are `true` to enable the feature or `false` to disable it. It should be set to `false` if you have not set up Amazon SES | Yes
 
 ### Portal Deployment
 

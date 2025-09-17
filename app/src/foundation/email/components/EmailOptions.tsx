@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   SpaceBetween,
 } from "@cloudscape-design/components";
 import DateTimeDisplay from "./DateTimeDisplay";
@@ -15,10 +14,6 @@ function EmailOptions(props: EmailOptionsProps) {
     <Box variant="div" padding={{top: "xxxl"}}>
       <SpaceBetween direction="vertical" size="xs">
         <Box variant="span"><strong>Date:</strong> <DateTimeDisplay datetime={ props.email.EmailReceiveTime } /></Box>
-        {
-          (import.meta.env.VITE_EMAIL_ENABLED === "true") &&
-          <Button variant="inline-link" iconName="arrow-right" ariaLabel={`Open forward email modal for ${ props.email.EmailSubject }`}>Forward</Button>
-        }
       </SpaceBetween>
     </Box>
   )

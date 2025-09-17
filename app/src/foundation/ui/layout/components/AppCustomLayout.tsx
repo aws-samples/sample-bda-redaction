@@ -8,15 +8,12 @@ import { useState } from 'react';
 import {
   AppLayout,
   AppLayoutProps,
-  Badge,
   BreadcrumbGroup,
   Flashbar,
   FlashbarProps,
   SideNavigation,
 } from '@cloudscape-design/components';
 import { Outlet, useMatches, useNavigate } from 'react-router-dom';
-import { useGetFolders } from '../../../../feature/folders/hooks/UseGetFolders';
-import { Folder } from '../../../folders/types';
 import { AppHelperContextType } from '../types';
 
 type RouteMatchHandle = {
@@ -26,7 +23,6 @@ type RouteMatchHandle = {
 function AppCustomLayout() {
   const navigate = useNavigate();
   const routeMatches = useMatches();
-  const { data: folders, refetch } = useGetFolders();
   const [activeHref, setActiveHref] = useState("/");
   const [navOpen, setNavOpen] = useState(true);
 
@@ -112,40 +108,8 @@ function AppCustomLayout() {
                   type: "link",
                   text: "Home",
                   href: `${import.meta.env.VITE_BASE}`
-                },
-                {
-                  type: "link",
-                  text: "Folders",
-                  href: `${import.meta.env.VITE_BASE}/folders`
-                },
-              ].concat(
-                (import.meta.env.VITE_EMAIL_ENABLED === "true") ? [{
-                  type: "link",
-                  text: "Rules",
-                  href: `${import.meta.env.VITE_BASE}/rules`
-                }] : []
-              )
-            },
-            {type: "divider"},
-            {
-              type: "section",
-              text: "Folders",
-              defaultExpanded: folders && folders?.length > 0,
-              items: folders?.sort((a, b) => a.Name.localeCompare(b.Name))
-                .map((folder: Folder) => {
-                  return {
-                    type: "link",
-                    text: folder.Name,
-                    href: `${import.meta.env.VITE_BASE}/folders/${folder.ID}`,
-                    info: (folder.MessagesCount > 0) ? <Badge color="blue">{ folder.MessagesCount }</Badge>: ""
-                  }
-                }) ?? [
-                  {
-                    type: "link",
-                    text: "Loading Folders...",
-                    href: import.meta.env.VITE_BASE
-                  }
-                ]
+                }
+              ]
             }
           ]}
         />
@@ -157,7 +121,6 @@ function AppCustomLayout() {
             setCurrentBreadcrumbDetailPageName,
             setActiveDrawerId,
             setActiveDrawer,
-            refetchFolders: refetch
           } satisfies AppHelperContextType}
         />
       }

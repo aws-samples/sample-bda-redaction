@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Grid,
   Header,
   Icon,
@@ -10,7 +9,6 @@ import {
   TextContent
 } from "@cloudscape-design/components";
 import DateTimeDisplay from "./DateTimeDisplay";
-import RoutedLink from "../../ui/links/RoutedLink";
 import { Email } from "../types";
 
 interface FullEmailDisplayProps {
@@ -55,29 +53,11 @@ function FullEmailDisplay(props: FullEmailDisplayProps) {
                     <Box variant="span"><strong>From:</strong> { props.email?.FromAddress }</Box>
                   </SpaceBetween>
                 </Box>
-                <Box variant="div">
-                  <SpaceBetween direction="horizontal" size="xxs">
-                    <Icon name="folder" variant="subtle" />
-                    <Box variant="span"><strong>Folder: </strong>
-                      {
-                        !props.previewMode
-                        ?
-                          <RoutedLink href={`/folders/${props.email?.FolderID}`} variant="secondary" buttonText={props.email?.folder?.Name} />
-                        :
-                          <span>{ props.email?.folder?.Name }</span>
-                      }
-                    </Box>
-                  </SpaceBetween>
-                </Box>
               </Box>
 
               <Box variant="div" padding={{top: (props.previewMode) ? "xs" : "xxxl"}}>
                 <SpaceBetween direction="vertical" size="xs">
                   <Box variant="span"><strong>Date:</strong> <DateTimeDisplay datetime={ props.email?.EmailReceiveTime } /></Box>
-                  {
-                    (!props.previewMode && import.meta.env.VITE_EMAIL_ENABLED === "true") &&
-                    <Button variant="inline-link" iconName="arrow-right" onClick={props.onForwardEmail} ariaLabel={`Open forward email modal for ${props.email?.EmailSubject}`}>Forward</Button>
-                  }
                 </SpaceBetween>
               </Box>
             </Grid>
